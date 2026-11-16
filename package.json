@@ -1,0 +1,10 @@
+{
+  "name": "schemamme",
+  "version": "1.0.0",
+  "description": "SCHEMAMME (Şema Üretici) — proje haritası görüntüleyici: klasörü bırak, dosya/bağ/katman şemasını al (yerel, tarayıcısız pencere)",
+  "main": "main.js",
+  "private": true,
+  "license": "MIT",
+  "author": "Kaptan İsmail Karabulut",
+  "keywords": ["dependency-graph", "code-map", "architecture", "offline", "electron"]
+}

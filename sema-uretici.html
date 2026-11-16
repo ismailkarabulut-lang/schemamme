@@ -1,0 +1,858 @@
+<!doctype html>
+<html lang="tr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Şema Üretici</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<meta name="color-scheme" content="dark light">
+<style>
+:root{--bg:#03020a;--fg:rgba(255,255,255,.85);--mut:rgba(255,255,255,.38);--pan:rgba(255,255,255,.035);--bd:rgba(255,255,255,.075);--edge:rgba(255,255,255,.16);--hot:#E85D24;
+--purple:#7C6EF5;--green:#1D9E75;--orange:#EF9F27;--red:#E85D24;--blue:#4FA8D5;--gold:#E8B86D;--teal:#2DD4BF;--pink:#C77DFF;
+--f1:'Rajdhani','DejaVu Sans',system-ui,sans-serif;--f2:'Orbitron','DejaVu Sans',system-ui,sans-serif;--fm:'JetBrains Mono','DejaVu Sans Mono',monospace;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f6fa;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}}
+:root[data-theme="light"]{--bg:#f6f6fa;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}
+*{box-sizing:border-box}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--fg);font:14.5px/1.45 var(--f1);display:flex;flex-direction:column;letter-spacing:.01em}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 620px at 50% -12%,rgba(124,110,245,.13),transparent 62%),radial-gradient(760px 520px at 88% 112%,rgba(45,212,191,.07),transparent 60%)}
+header{position:relative;padding:14px 12px 10px;border-bottom:1px solid var(--bd);background:linear-gradient(180deg,rgba(124,110,245,.055),transparent);z-index:1}
+header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:190px;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
+h1{margin:0 0 10px;font-family:var(--f2);font-size:12.5px;font-weight:800;letter-spacing:.34em;text-align:center;text-transform:uppercase;color:#fff;text-shadow:0 0 44px rgba(124,110,245,.6)}
+.bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center}
+.bar .btn{padding:7px 12px;white-space:nowrap;font-size:10.5px}
+#q{width:110px;min-width:80px}
+#zm,#zp{padding:7px 9px}
+.btn{border:1px solid var(--bd);background:var(--pan);color:var(--fg);padding:6px 12px;border-radius:20px;cursor:pointer;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;transition:border-color .18s,color .18s,box-shadow .25s,transform .18s}
+.btn:hover{border-color:rgba(124,110,245,.6);color:#fff;box-shadow:0 0 0 1px rgba(124,110,245,.18),0 8px 22px -14px var(--purple)}
+.btn:active{transform:translateY(1px)}
+.btn:focus-visible,#q:focus-visible{outline:2px solid #7c6cff;outline-offset:1px}
+#q{border:1px solid var(--bd);background:var(--pan);color:var(--fg);padding:6px 8px;border-radius:8px;width:110px;min-width:80px;font:inherit}
+.chk{color:var(--mut);font-size:12px}
+main{flex:1;overflow:auto;position:relative}
+#empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--mut);padding:24px;gap:6px}
+#empty b{color:var(--fg);font-family:var(--f2);font-size:13px;letter-spacing:.28em;text-transform:uppercase}
+#empty span{font-family:var(--fm);font-size:11px;letter-spacing:.04em;max-width:420px}
+#cv{position:relative;margin:0 auto;background-image:radial-gradient(rgba(255,255,255,.055) 1px,transparent 1px);background-size:22px 22px;background-position:12px 12px}
+#sv{position:absolute;left:0;top:0;pointer-events:none}
+#sv text.lbl{pointer-events:auto;cursor:pointer;user-select:none;font-family:var(--fm);letter-spacing:.18em;text-transform:uppercase}
+#sv text.lbl:hover{fill:#7c6cff}
+.nd{position:absolute;border:1px solid var(--nc,var(--bd));border-radius:11px;padding:9px 11px;cursor:pointer;overflow:hidden;color:var(--fg);
+background:linear-gradient(150deg,rgba(255,255,255,.062),rgba(255,255,255,.012));
+transition:transform .2s cubic-bezier(.2,.8,.24,1),box-shadow .28s,border-color .2s,opacity .15s;
+animation:ndIn .52s cubic-bezier(.2,.8,.24,1) both;animation-delay:calc(var(--i,0)*26ms)}
+.nd::before{content:'';position:absolute;left:0;right:0;top:0;height:2px;background:var(--nc);opacity:.85}
+.nd::after{content:'';position:absolute;left:-3.5px;top:50%;margin-top:-3.5px;width:7px;height:7px;border-radius:2px;background:var(--nc);opacity:.9}
+.nd b{display:block;font-family:var(--f2);font-size:calc(9.6px + var(--fs,0)*3.4px);font-weight:700;letter-spacing:.05em;text-transform:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--nc)}
+.nd i.p2{position:absolute;right:-3.5px;top:50%;margin-top:-3.5px;width:7px;height:7px;border-radius:2px;background:var(--nc);opacity:.9;font-style:normal}
+.nd small{display:block;margin-top:3px;color:var(--mut);font-family:var(--fm);font-size:calc(8.4px + var(--fs,0)*1.4px);letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nd:hover{transform:translateY(-2px);box-shadow:0 8px 26px -14px var(--nc),0 0 0 1px var(--nc)}
+.nd.ri{box-shadow:0 0 30px -10px var(--nc)}
+.nd.ri::before{height:3px;opacity:1}
+.nd.canli::before{animation:nefes 3.6s ease-in-out infinite}
+@keyframes ndIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes nefes{0%,100%{opacity:.5;box-shadow:none}50%{opacity:1;box-shadow:0 0 16px var(--nc)}}
+@keyframes ciz{to{stroke-dashoffset:0}}
+@keyframes eIn{from{opacity:0}to{opacity:.6}}
+.nd.orph{border-style:dashed;border-color:var(--hot)!important}
+.nd.okunmadi{border-style:dotted;border-color:#8A93A6!important;background:repeating-linear-gradient(135deg,rgba(138,147,166,.11) 0 5px,rgba(138,147,166,0) 5px 11px)}
+.nd.okunmadi b{color:#B9C0CC}
+.nd.okunmadi small{color:#8A93A6;letter-spacing:.02em}
+.nd.sel{box-shadow:0 0 0 2px var(--nc),0 0 30px -6px var(--nc)}
+.nd.dim{opacity:.16;filter:grayscale(.5)}
+.nd.hit{box-shadow:0 0 0 2px #fbc02d}
+.dim{opacity:.18}
+path.e{fill:none;stroke:var(--edge);stroke-width:1.2;opacity:.6}
+path.e.est{opacity:.35;animation:eIn .9s ease both}
+path.e.on{stroke:var(--purple);stroke-width:2.4;opacity:1;filter:drop-shadow(0 0 7px var(--purple))}
+path.e.off{opacity:.08}
+#panel{display:none;position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;background:rgba(8,8,16,.94);backdrop-filter:blur(14px);border-top:1px solid rgba(124,110,245,.35);padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0009}
+#panel h2{margin:0 24px 2px 0;font-size:16px}
+#panel h3{margin:12px 0 4px;font-size:12px;color:var(--mut)}
+#panel .p{color:var(--mut);font-size:12px;word-break:break-all}
+#panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:var(--fg);font-size:22px;cursor:pointer}
+.tag{display:inline-block;border:1px solid var(--bd);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:var(--mut)}
+.chip{border:1px solid var(--bd);background:none;color:var(--fg);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
+.legend{margin:10px auto 0;max-width:760px;color:var(--mut);font-size:11.5px;line-height:1.6;font-family:var(--fm);letter-spacing:.02em}.legend summary{cursor:pointer;letter-spacing:.14em;text-transform:uppercase}
+path.e.ah{fill:var(--edge);stroke:none;opacity:.9}path.e.ah.on{fill:#7c6cff;stroke:none;opacity:1}path.e.ah.off{opacity:.08}
+.role{margin:10px 0;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;line-height:1.6}
+#k4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:1100px;margin:8px auto 0;padding:0 12px;width:100%}
+@media(max-width:760px){#k4{grid-template-columns:repeat(2,1fr)}}
+.k4i{position:relative;border:1px solid var(--bd);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-height:62px;overflow:hidden;
+background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012));animation:ndIn .5s cubic-bezier(.2,.8,.24,1) both}
+.k4i:nth-child(1){animation-delay:.02s}.k4i:nth-child(2){animation-delay:.08s}.k4i:nth-child(3){animation-delay:.14s}.k4i:nth-child(4){animation-delay:.2s}
+.k4i::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--purple);opacity:.75}
+.k4i b{font-family:var(--fm);font-size:8.5px;letter-spacing:.26em;color:var(--mut);font-weight:500}
+.k4i span{font-family:var(--f1);font-size:15px;font-weight:700;line-height:1.2;color:#fff;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k4i i{font-family:var(--fm);font-size:9px;color:var(--mut);font-style:normal;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.k4i[data-go]{transition:border-color .15s;cursor:pointer}.k4i[data-go]:hover{border-color:#7c6cff}
+#geriBilgi{max-width:1100px;margin:6px auto 0;padding:0 12px;font-size:11px;color:var(--mut)}
+#anahtar{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:1100px;margin:9px auto 0;padding:0 12px;font-family:var(--fm);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+#anahtar span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+#anahtar i{width:9px;height:9px;border-radius:2px;display:inline-block}
+#anahtar em{font-style:normal;color:var(--fg);opacity:.75}
+.gorev{margin:10px 0;padding:8px 10px;border:1px solid #7c6cff;border-radius:8px;font-size:12.5px;line-height:1.55;background:rgba(124,108,255,.07)}
+.gorev h3{margin:0 0 4px;font-size:10px;letter-spacing:.14em;color:#7c6cff;font-weight:700}
+.gorev ol{margin:4px 0 0 16px;padding:0}.gorev li{margin:2px 0}
+</style></head><body>
+<header>
+<h1>ŞEMA ÜRETİCİ</h1>
+<div class="bar">
+<label class="btn" title="Dosya seç">Dosya<input id="f1" type="file" multiple hidden></label>
+<label class="btn" title="Klasör seç">Klasör<input id="f2" type="file" webkitdirectory hidden></label>
+<button class="btn" id="demo">Örnek</button>
+<button class="btn" id="gd" hidden title="Haritayı markdown olarak indir (SEMA-HARITASI.md)">📘 Harita (MD)</button>
+<button class="btn" id="png" hidden title="Haritanın resmini indir">🖼 PNG</button>
+<button class="btn" id="jdis" hidden title="Grafı JSON olarak indir (sema-graph.json)">💾 JSON</button>
+<label class="btn" id="jicL" hidden title="JSON'dan harita yükle">📥 JSON<input id="jic" type="file" accept=".json,application/json" hidden></label>
+<button class="btn ai" id="mv" hidden title="Modele verilecek özeti panoya kopyala">🧠 Modele</button>
+<input id="q" placeholder="ara…" aria-label="Ara">
+<label class="chk"><input type="checkbox" id="orph"> bağımsızlar</label>
+<button class="btn" id="zm" aria-label="Küçült">−</button><button class="btn" id="zp" aria-label="Büyüt">+</button>
+</div>
+<details class="legend"><summary>Nasıl okunur?</summary>Ok A → B demek “A, B’yi kullanıyor”. Üstteki kutu alttakini çağırır: en üst başlatıcılar, en alt temel parçalar. Kırmızı kesikli kutu hiçbir yere bağlı değil. Bir kutuya dokununca bağlantıları yanar ve altta sade bir açıklama açılır. <b>Düz ok</b> kesin bağdır (import ya da tanım). <b>Kesikli ok</b> tahmindir: yalnız dosya adı benzerliğinden çıkar, koda bakmadan güvenme. <b>Noktalı gri kutu</b> = dosyanın içeriği 4 MB üzeri olduğu için okunmadı; rolü ve bağları hesaplanmadı, "kullanılmıyor" demek değildir.</details></header>
+<section id="k4" hidden></section>
+<div id="geriBilgi" hidden></div>
+<div id="anahtar" hidden></div>
+<main id="wrap">
+<div id="empty"><b>Dosyaları buraya bırak</b><span>Klasör, zip, birden çok dosya ya da tek bir not dosyası (.md / .txt)</span></div>
+<div id="cv"><svg id="sv"></svg></div>
+</main>
+<aside id="panel"></aside>
+<script src="jszip.min.js"></script>
+<script>
+/* OKUNAN: içeriği metin olarak okunabilen uzantılar — TEK KAYNAK.
+   Burada olmayan uzantı "içeriği okunmadı" sayılır; "bağımsız / kullanılmıyor" hükmü VERİLMEZ. */
+const TXT=/\.(py|js|mjs|ts|tsx|jsx|json|md|txt|sh|html|css|kt|kts|java|yml|yaml|toml|sql|c|h|cpp|go|rs|rb|php|ini|cfg|conf|service|csv|xml|gradle|properties|pro|bat|cmd|ps1|gitignore|gitattributes|editorconfig|mk|plist)$/i;
+/* AYAR: derleme/bağımlılık/imza tanımı. Proje dosyasına kod bağı kurmaz,
+   bu yüzden "kullanılmıyor" hükmü verilmez — rolü bağımlılık listesidir. */
+const AYAR_EXT=new Set(["kts","gradle","properties","pro","xml","toml","yml","yaml","json","ini","cfg","conf","env","gitignore","bat","cmd","ps1","plist"]);
+/* Uzantısız dosya (gradlew, LICENSE…) denenir; içinde NUL varsa ikili sayılır. */
+function okunabilirUzanti(p){const nm=String(p).split("/").pop()||p;return TXT.test(nm)||!/\.[^./]+$/.test(nm)}
+function ikili(t){return /\u0000/.test(String(t).slice(0,4096))}
+const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|\.gradle|\.build-outputs|\.idea)(\/|$)/.test(p)||/(^|\/)(gradlew|gradlew\.bat|mvnw|mvnw\.cmd)$/i.test(p)||/\.(png|jpe?g|webp|gif|ico|apk|jar|keystore|base64|ttf|otf|mp3|mp4|wav|zip|7z)$/i.test(p)};
+/* Theia tasarım dili paleti (mimari_v4_canli.html'den ölçüldü) */
+const PAL=["#7C6EF5","#2DD4BF","#EF9F27","#4FA8D5","#C77DFF","#1D9E75","#E8B86D","#E85D24","#8A93A6"];
+/* RENK = ROL (anlam taşır) · KUTU HACMİ = SATIR SAYISI */
+const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9F27","bağımsız":"#E85D24"};
+function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map();
+
+/* Bir dosyanın metni okunacak mı: üç engel var — okunmayan uzantı, boyut, ikili içerik.
+   Üçü de "ölçülmedi" demektir; hiçbiri "kullanılmıyor" hükmü üretmez. */
+async function metinAl(p,boyut,oku){
+  if(!okunabilirUzanti(p))return{t:null,okunmadi:true,neden:"uzanti"};
+  if(boyut>=BUYUK)return{t:null,okunmadi:true,neden:"boyut"};
+  const t=await oku();
+  if(t&&ikili(t))return{t:null,okunmadi:true,neden:"ikili"};
+  if(t&&new Blob([t]).size>=BUYUK)return{t:null,okunmadi:true,neden:"boyut"};
+  return{t,okunmadi:false,neden:""};
+}
+async function ingest(files){
+  const b0=document.getElementById("geriBilgi");if(b0){b0.hidden=true;b0.textContent=""}
+  const E=[];
+  const atlanan=[];
+  for(const f of files){
+    if(/\.zip$/i.test(f.name)&&typeof JSZip!=="undefined"){
+      try{const z=await JSZip.loadAsync(f);
+        for(const [p,e] of Object.entries(z.files)){
+          if(e.dir||SKIP.test(p))continue;
+          const onBoy=(e._data&&e._data.uncompressedSize)||0;
+          const r=await metinAl(p,onBoy,()=>e.async("string"));
+          if(r.neden==="boyut")atlanan.push(p);
+          E.push({path:p,size:onBoy,text:r.t,okunmadi:r.okunmadi,neden:r.neden});
+        }}catch(x){alert("Zip açılamadı: "+x.message)}
+    }else if(/\.zip$/i.test(f.name)){
+      uyar("⚠ Zip açılamadı: zip okuyucu (jszip.min.js) yüklenmedi. Dosya uygulama klasöründe olmalı — ya da klasörü \"Klasör\" düğmesiyle seçin.");
+    }else{
+      const p=f.webkitRelativePath||f.name; if(SKIP.test(p))continue;
+      const r=await metinAl(p,f.size,()=>f.text());
+      if(r.neden==="boyut")atlanan.push(p);
+      E.push({path:p,size:f.size,text:r.t,okunmadi:r.okunmadi,neden:r.neden});
+    }
+  }
+  if(atlanan.length){
+    const b=document.getElementById("geriBilgi");
+    if(b){b.hidden=false;b.textContent="⚠ "+atlanan.length+" dosya çok büyük ("+(BUYUK/1e6)+" MB üstü), içeriği okunmadı: "+atlanan.slice(0,3).join(", ")+" — haritada görünür, bağı hesaplanmaz"}
+  }
+  build(E);
+}
+const BUYUK=4e6;               // 4 MB üstü dosyanın içeriği okunmaz (tarayıcı belleği)
+/* Aynı adlı dosyalar ayırt edilsin: ad çakışıyorsa son iki yol parçası etiket olur
+   (3 × .gitignore → .gitignore · app/.gitignore · .aistudio/.gitignore). */
+function etiketAyirt(N){
+  const say={};N.forEach(x=>say[x.name]=(say[x.name]||0)+1);
+  N.forEach(x=>{if(say[x.name]>1){const p=String(x.path).split("/");if(p.length>1)x.name=p.slice(-2).join("/")}});
+  return N;
+}
+function build(E){
+  if(!E.length)return;
+  if(E.every(e=>e.path.includes("/"))&&new Set(E.map(e=>e.path.split("/")[0])).size===1)E.forEach(e=>e.path=e.path.split("/").slice(1).join("/"));
+  heading=E.length===1&&!!E[0].text&&/\.(md|txt)$/i.test(E[0].path);
+  G=heading?headingGraph(E[0]):fileGraph(E);
+  G=etiketAyirt(G);
+  /* Yeni harita gelince açık panel KAPANIR: eski dosyanın kartı yeni haritanın üstünde kalırsa
+     yanlış dosyayı anlatır (panel indeksleri yeni G'ye göre kayar). */
+  const P0=document.getElementById("panel");if(P0){P0.style.display="none";P0.innerHTML=""}
+  sel=-1;draw();
+}
+function summ(t,ext){
+  if(!t)return "İkili ya da okunamayan dosya; içeriği analiz edilmedi.";
+  let m=t.match(/^(?:\s*#!.*\n)?\s*(?:"""|''')([\s\S]*?)(?:"""|''')/);
+  if(m)return m[1].trim().split("\n").slice(0,3).join(" ").slice(0,260);
+  m=t.match(/^\s*\/\*+\s*([\s\S]*?)\*\//);
+  if(m)return m[1].replace(/^\s*\*\s?/gm,"").trim().slice(0,260);
+  const L=t.split("\n").map(s=>s.trim()).filter(s=>s&&!s.startsWith("#!")),c=[];
+  for(const s of L){if(/^(#|\/\/|--|;)\s*\S/.test(s))c.push(s.replace(/^(#+|\/\/+|--|;)\s*/,""));else break}
+  if(c.length)return c.slice(0,3).join(" ").slice(0,260);
+  if(ext==="md"||ext==="txt"){const l=L.find(s=>!s.startsWith("---"));if(l)return l.replace(/^#+\s*/,"").slice(0,260)}
+  return "Dosyada açıklama yazısı yok. Rol ve bağlar ölçüldü; dosyayı bir modele anlatmak için panelin altındaki \"MODEL İÇİN GÖREV TARİFİ\" bölümünü kullan.";
+}
+/* Tanım adı + SATIR NUMARASI: model dosyayı açmadan doğru satıra atlayabilsin. */
+function semboller(t){
+  if(!t)return[];
+  const re=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:async\s+)?(?:def|class|function|fun)\s+([A-Za-z_]\w*)|^\s*(?:val|var|const|let)\s+([A-Za-z_]\w*)/;
+  const r=[];
+  t.split("\n").forEach((satir,i)=>{
+    const m=re.exec(satir);
+    if(m&&r.length<40){const ad=m[1]||m[2];if(!r.some(x=>x.ad===ad))r.push({ad,satir:i+1})}
+  });
+  return r;
+}
+function defs(t){
+  if(!t)return[];const r=[];let m;
+  /* Fonksiyon/sınıf + DEĞİŞKEN tanımları birlikte sayılır:
+     yalnız val tutan dosyalar (Type.kt gibi) sahipsiz görünmesin. */
+  const re=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:async\s+)?(?:def|class|function|fun)\s+([A-Za-z_]\w*)|^\s*(?:val|var|const|let)\s+([A-Za-z_]\w*)/gm;
+  while((m=re.exec(t))&&r.length<25)r.push(m[1]||m[2]);return r;
+}
+function okunmadiMetni(e){
+  if(!e.okunmadi)return summ(e.text,((e.path||"").split("/").pop().split(".").pop()||"").toLowerCase());
+  if(e.neden==="uzanti")return "İçerik okunmadı: bu dosyanın uzantısı metin olarak okunmuyor. Rol ve bağ çıkarılamadı — \"kullanılmıyor\" hükmü verilemez.";
+  if(e.neden==="ikili")return "İçerik okunmadı: dosyada metin dışı baytlar var (ikili). Rol ve bağ çıkarılamadı.";
+  return "Dosya 4 MB üzeri olduğu için metni okunmadı; yalnız adı ve boyutu biliniyor. Rol ve bağ çıkarılamaz.";
+}
+function fileGraph(E){
+  const N=E.map((e,i)=>{
+    const nm=e.path.split("/").pop(),ext=(nm.includes(".")?nm.split(".").pop():"").toLowerCase();
+    return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:e.text,size:e.size,okunmadi:!!e.okunmadi,nd:e.neden||"",
+      lines:e.text?e.text.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(e),defs:defs(e.text),sembol:semboller(e.text)};
+  });
+  const byName={},byStem={},DECL={},PAKET={};
+  /* Dış kütüphane kökleri: bunlardan gelen adlar proje dosyasıyla EŞLEŞTİRİLMEZ.
+     (Örn. androidx.compose.ui.graphics.Color → Color.kt sanılıyordu.) */
+  const DIS=/^(android|androidx|kotlin|kotlinx|java|javax|dalvik|sun|org|com\.google|com\.squareup|com\.android|okhttp3|retrofit2|io\.|org\.)/;
+  GUVEN=new Map();
+  N.forEach(n=>{
+    if(!byName[n.name])byName[n.name]=n;
+    if(n.text&&(n.ext==="kt"||n.ext==="java")){
+      let m;
+      /* Proje paketi: "package com.example.ui.theme" → PAKET["com.example.ui.theme.Color"] */
+      const pr=/^\s*package\s+([\w.]+)/m.exec(n.text);
+      if(pr)PAKET[pr[1]+"."+n.name.replace(/\.(kt|java)$/,"")]=n;
+      /* Tanımlar: class/object/interface/fun + val/var (büyük harfle başlayan) */
+      const rd=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:data|sealed|enum|abstract|private|internal|open|annotation|public|final|inline|suspend)\s+)*(?:class|object|interface|fun|val|var)\s+([A-Z]\w+)/gm;
+      while(m=rd.exec(n.text))if(!DECL[m[1]])DECL[m[1]]=n
+    }
+    const st=n.name.replace(/\.[^.]+$/,"");
+    if(/^(py|js|mjs|ts|tsx|jsx|css|json|sh|kt)$/.test(n.ext)&&!byStem[st])byStem[st]=n;
+  });
+  N.forEach(a=>{
+    if(!a.text)return;
+    if(AYAR_EXT.has((a.ext||"").toLowerCase())||/^(md|txt)$/i.test(a.ext))return;   /* belge ve ayar dosyası kod bağı kurmaz */
+    /* add(dosya, güven): kesin = import/tanım yolu · tahmin = yalnız dosya adı benzerliği */
+    const add=(b,tip)=>{
+      if(!b||b===a)return;
+      a.out.add(b.id);b.inn.add(a.id);
+      const k=a.id+"-"+b.id;
+      if(!GUVEN.has(k)||tip==="kesin")GUVEN.set(k,tip);
+    };
+    if(a.ext==="kt"||a.ext==="java"){
+      (a.text.match(/\b[A-Z]\w{3,}\b/g)||[]).forEach(w=>add(DECL[w],"kesin"));
+      /* import: yalnız proje paketiyle TAM eşleşme; dış kütüphane yok sayılır */
+      let m;const rk=/^\s*import\s+([\w.]+)/gm;
+      while(m=rk.exec(a.text)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"kesin")}
+    }
+    for(const nm in byName)if(nm.length>=4&&a.text.includes(nm))add(byName[nm],"tahmin");
+    let m;const r1=/^\s*(?:from|import)\s+([\w.]+)/gm;
+    while(m=r1.exec(a.text)){if(/^(py|js|mjs|ts|tsx|jsx)$/.test(a.ext)){const p=m[1].split(".");add(byStem[p[p.length-1]],"kesin")}}
+    const r2=/(?:from\s+|require\(\s*|import\s+)["'](\.{0,2}\/?[^"']+)["']/g;
+    while(m=r2.exec(a.text))add(byStem[m[1].split("/").pop().replace(/\.[^.]+$/,"")],"kesin");
+  });
+  return N;
+}
+function headingGraph(e){
+  let t=e.text;
+  if(!/^#{1,4}\s/m.test(t))t="# "+e.path+"\n"+t.split(/\n\s*\n/).map(p=>{const a=p.trim().split("\n");return "## "+a[0].slice(0,60)+"\n"+a.slice(1).join("\n")}).join("\n");
+  const N=[],st=[];let cur=null;
+  t.split("\n").forEach(l=>{
+    const m=l.match(/^(#{1,4})\s+(.+)/);
+    if(m){
+      const lv=m[1].length;while(st.length&&st[st.length-1].lv>=lv)st.pop();
+      const p=st[st.length-1];
+      cur={id:N.length,name:m[2].slice(0,40),path:m[2],ext:"başlık",lv,text:"",size:0,out:new Set(),inn:new Set(),defs:[],body:[]};
+      cur.group=(lv<=2||!p)?cur.name:p.group;
+      if(p){p.out.add(cur.id);cur.inn.add(p.id)}
+      N.push(cur);st.push(cur);
+    }else if(cur&&l.trim())cur.body.push(l.trim());
+  });
+  N.forEach(n=>{n.sum=n.body.join(" ").slice(0,600)||"Bu başlığın altında metin yok.";n.lines=n.body.length});
+  return N;
+}
+function draw(){
+  const N=G,n=N.length,GX=18,GY=52;
+  const sS={};const dfs=a=>{sS[a.id]=1;let m=0;a.out.forEach(b=>{if(sS[b]===1)return;if(sS[b]!==2)dfs(N[b]);m=Math.max(m,N[b].H+1)});a.H=m;sS[a.id]=2};N.slice().sort((p,q)=>(p.inn.size-p.out.size)-(q.inn.size-q.out.size)).forEach(a=>{if(!sS[a.id])dfs(a)});const mx=Math.max(0,...N.map(a=>a.H));N.forEach(a=>a.L=mx-a.H);
+  for(let i=0;i<0;i++){let ch=false;
+    N.forEach(a=>a.out.forEach(b=>{const t=Math.min(a.L+1,9);if(N[b].L<t){N[b].L=t;ch=true}}));
+    if(!ch)break}
+  /* ---- KUTU HACMİ = SATIR SAYISI (karekök ölçek: dev dosya taşırmasın) ---- */
+  const mxL=Math.max(1,...N.map(x=>x.lines||1));
+  N.forEach(x=>{
+    const t=Math.min(1,Math.sqrt(Math.max(1,x.lines||1))/Math.sqrt(mxL));
+    x.t=t;
+    x.w=Math.round(148+t*136);
+    x.h=Math.round(56+t*60);
+  });
+  col={};N.forEach(x=>col[x.group]=renkOf(x));
+  const lv={};N.forEach(x=>(lv[x.L]=lv[x.L]||[]).push(x));
+  const Wt=1120;let y=GY/2;const labs=[];
+  Object.keys(lv).sort((a,b)=>a-b).forEach(k=>{
+    labs.push([+k,y]);if(KATLI.has(+k)){y+=26;return}
+    /* katman içinde en büyük kutu önce, satırlar sıkı paketlenir */
+    const A=lv[k].slice().sort((a,b)=>(b.lines||0)-(a.lines||0)||a.name.localeCompare(b.name));
+    let row=[],top=y,rowH=0,sum=0;
+    const kapat=()=>{
+      if(!row.length)return;
+      const tot=row.reduce((s,x)=>s+x.w,0)+GX*(row.length-1);
+      let cx=Math.round((Wt-tot)/2);
+      row.forEach(x=>{x.x=cx;x.y=top;cx+=x.w+GX});
+      y=top+rowH+GY;row=[];rowH=0;sum=0;top=y;
+    };
+    A.forEach(x=>{
+      if(row.length&&sum+GX+x.w>Wt-GX)kapat();
+      sum+=(row.length?GX:0)+x.w;row.push(x);rowH=Math.max(rowH,x.h);
+    });
+    kapat();
+  });
+  const cv=$("#cv");cv.style.width=Wt+"px";cv.style.height=y+"px";
+  $("#empty").style.display="none";
+  $("#mv").hidden=false;$("#gd").hidden=false;
+  let h='<svg id="sv" width="'+Wt+'" height="'+y+'">';
+  const katEtiket=(k,ilk,son)=>{const rl=new Set((lv[k]||[]).map(x=>roleOf(x).short));
+    if(ilk&&rl.size===1&&rl.has("başlatıcı"))return " · başlatıcılar";
+    if(son&&rl.size===1&&rl.has("temel parça"))return " · temel parçalar";
+    return "";};
+  if(!heading)labs.forEach(([k,yy],i)=>{h+='<text class="lbl" data-k="'+k+'" x="6" y="'+(yy-6)+'" fill="#8f8fa6" font-size="11">'+(KATLI.has(k)?'▸ ':'▾ ')+(k+1)+'. katman'+(i===0?katEtiket(k,true,false):(i===labs.length-1&&labs.length>1?katEtiket(k,false,true):''))+(KATLI.has(k)?' ('+lv[k].length+' dosya)':'')+'</text>'});
+  N.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
+    const B=N[b];if(KATLI.has(B.L))return;
+    const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
+    const tip=GUVEN.get(a.id+"-"+b)||"tahmin";
+    h+='<path class="e'+(tip==="tahmin"?" est":"")+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip==="tahmin"?' stroke-dasharray="4 4"':'')+'><title>'+(tip==="tahmin"?"tahmin · dosya adı benzerliği":"kesin · import/tanım")+'</title></path>';
+    h+='<path class="e ah" data-a="'+a.id+'" data-b="'+b+'" d="M'+(x2-5)+' '+(y2-9)+' L'+x2+' '+y2+' L'+(x2+5)+' '+(y2-9)+' Z"/>';
+  })});
+  h+="</svg>";
+  N.forEach(x=>{
+    if(KATLI.has(x.L))return;
+    const c=renkOf(x),buyuk=!!x.okunmadi,orph=!heading&&!buyuk&&!x.inn.size&&!x.out.size;
+    const canli=!heading&&!buyuk&&x.inn.size>=3,ri=!heading&&!buyuk&&roleOf(x).risk==="yüksek";
+    h+='<div class="nd'+(buyuk?" okunmadi":"")+(orph?" orph":"")+(canli?" canli":"")+(ri?" ri":"")+'" data-i="'+x.id+'" tabindex="0" title="'+esc(x.path)+'" style="left:'+x.x+'px;top:'+x.y+'px;width:'+x.w+'px;height:'+x.h+'px;--nc:'+c+';--rk:'+(ri?1:0)+';--fs:'+(x.t||0).toFixed(2)+';--i:'+Math.min(x.id,40)+'">'
+      +"<b>"+esc(x.name)+"</b><small>"+(heading?esc(x.ext):roleOf(x).short)+(x.okunmadi?" · 4 MB+":(x.lines?" · "+x.lines+" satır":""))+"</small><i class=\"p2\"></i></div>";
+  });
+  cv.innerHTML=h;
+  /* ===== MOTION: oklar çizilir, aralarında veri noktası akar ===== */
+  const azalt=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sv0=cv.querySelector("svg");
+  if(sv0&&!azalt){
+    const yollar=[...sv0.querySelectorAll("path.e:not(.ah)")];
+    yollar.forEach((p,i)=>{
+      if(p.classList.contains("est")){p.style.animationDelay=(i*6)+"ms";return}
+      const L=p.getTotalLength?p.getTotalLength():0;
+      if(!L)return;
+      p.style.strokeDasharray=L;
+      p.style.strokeDashoffset=L;
+      p.style.animation="ciz .95s cubic-bezier(.3,.9,.3,1) forwards";
+      p.style.animationDelay=(i*9)+"ms";
+    });
+    yollar.filter((p,i)=>i%4===0).forEach((p,i)=>{
+      const c2=document.createElementNS("http://www.w3.org/2000/svg","circle");
+      c2.setAttribute("r","2.1");
+      c2.setAttribute("fill",p.getAttribute("data-tip")==="tahmin"?"#8A93A6":"#2DD4BF");
+      c2.setAttribute("opacity",".9");
+      const am=document.createElementNS("http://www.w3.org/2000/svg","animateMotion");
+      am.setAttribute("dur",(3+i*0.45).toFixed(1)+"s");
+      am.setAttribute("repeatCount","indefinite");
+      am.setAttribute("path",p.getAttribute("d"));
+      am.setAttribute("begin",(i*0.6).toFixed(1)+"s");
+      c2.appendChild(am);sv0.appendChild(c2);
+    });
+  }
+  const fit=(cv.parentElement.clientWidth-24)/Wt;
+  cv.style.zoom=Math.min(Z, fit>0?fit:1);
+  view();
+}
+function view(){
+  const q=$("#q").value.trim().toLowerCase(),o=$("#orph").checked;
+  const rel=new Set();
+  if(sel>=0){rel.add(sel);G[sel].out.forEach(i=>rel.add(i));G[sel].inn.forEach(i=>rel.add(i))}
+  document.querySelectorAll(".nd").forEach(el=>{
+    const x=G[+el.dataset.i];let dim=false;
+    if(sel>=0&&!rel.has(x.id))dim=true;
+    if(q&&!(x.name+" "+x.path+" "+x.sum).toLowerCase().includes(q))dim=true;
+    if(o&&(x.inn.size||x.out.size))dim=true;
+    el.classList.toggle("dim",dim);el.classList.toggle("sel",x.id===sel);
+    el.classList.toggle("hit",!!q&&!dim&&(x.name+" "+x.path+" "+x.sum).toLowerCase().includes(q));
+  });
+  document.querySelectorAll("path.e").forEach(p=>{
+    const a=+p.dataset.a,b=+p.dataset.b;
+    p.classList.toggle("on",sel>=0&&(a===sel||b===sel));
+    p.classList.toggle("off",sel>=0&&a!==sel&&b!==sel);
+  });
+}
+function chips(ids){
+  return ids.size?[...ids].map(i=>'<button class="chip" data-go="'+i+'" style="border-color:'+col[G[i].group]+'">'+esc(G[i].name)+"</button>").join(""):'<span class="p">yok</span>';
+}
+function pick(i){
+  sel=i;view();const x=G[i],P=$("#panel");
+  const kb=x.size?(x.size/1024).toFixed(1)+" KB":"";
+  const okunmadiEtiket=(x.nd==="uzanti"?"içerik okunmadı: bu uzantı okunmuyor ("+(x.ext||"uzantısız")+") — rol/bağ verilmez":x.nd==="ikili"?"içerik okunmadı: ikili dosya — rol/bağ verilmez":"içerik okunmadı: 4 MB üzeri — rol/bağ hesaplanmadı");
+  const status=heading?"":(x.okunmadi?'<span class="tag" style="color:#8A93A6">'+okunmadiEtiket+'</span>':(roleOf(x).short==="yapılandırma"||roleOf(x).short==="belge")?'<span class="tag">'+roleOf(x).short+': kod bağı kurmaz · "kullanılmıyor" hükmü yok</span>':!x.inn.size&&!x.out.size?'<span class="tag" style="color:var(--hot)">bağımsız: hiçbir bağlantı yok</span>':!x.inn.size?'<span class="tag">giriş noktası: kimse çağırmıyor</span>':"");
+  P.innerHTML='<button class="x" aria-label="Kapat">×</button><h2 style="color:'+col[x.group]+'">'+esc(x.name)+'</h2><div class="p">'+esc(x.path)+"</div>"
+    +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
+    +'<span class="tag">'+esc(x.ext||"dosya")+"</span>"+(x.lines?'<span class="tag">'+x.lines+" satır</span>":"")+(kb?'<span class="tag">'+kb+"</span>":"")+'<span class="tag">'+esc(x.group)+"</span>"+status+(girisRolu(x)?'<span class="tag">manifestte bildirilen giriş noktası</span>':"")
+    +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır</h3><span class="p">'+x.sembol.map(s=>esc(s.ad)+" ("+s.satir+")").join(", ")+"</span>":"")
+    +gorevTarifi(x)
+    +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
+    +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
+    ;
+  P.style.display="block";
+}
+function closeP(){sel=-1;$("#panel").style.display="none";view()}
+$("#cv").addEventListener("click",e=>{const n=e.target.closest(".nd");n?pick(+n.dataset.i):closeP()});
+$("#cv").addEventListener("keydown",e=>{if(e.key==="Enter"){const n=e.target.closest(".nd");if(n)pick(+n.dataset.i)}});
+$("#panel").addEventListener("click",e=>{
+  if(e.target.closest(".x"))return closeP();
+  if(e.target.id==="gtKopya"){const t=tarifMetni(G[sel]),b=e.target;
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(
+      ()=>{b.textContent="✓ Kopyalandı";setTimeout(()=>b.textContent="📋 Tarifi kopyala",1500)},
+      ()=>{prompt("Kopyalanamadı, elle kopyala:",t)});return}
+  const c=e.target.closest(".chip");
+  if(c){const i=+c.dataset.go;pick(i);const el=document.querySelector('.nd[data-i="'+i+'"]');if(el)el.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}
+});
+$("#q").oninput=view;$("#orph").onchange=view;
+$("#zp").onclick=()=>{Z=Math.min(1.6,Z+.2);$("#cv").style.zoom=Z};
+$("#zm").onclick=()=>{Z=Math.max(.4,Z-.2);$("#cv").style.zoom=Z};
+$("#f1").onchange=e=>ingest(e.target.files);
+$("#f2").onchange=e=>ingest(e.target.files);
+/* ---- SÜRÜKLE-BIRAK: klasör de okunur (webkitGetAsEntry + özyineleme) ---- */
+function uyar(t){const b=document.getElementById("geriBilgi");if(b){b.hidden=false;b.textContent=t}}
+const DOSYA_SINIRI=20000;
+function dizinOku(entry,yol,out){
+  return new Promise(res=>{
+    if(out.length>DOSYA_SINIRI){res(out);return}
+    const okuyucu=entry.createReader();
+    const oku=()=>okuyucu.readEntries(async g=>{
+      if(!g.length){res(out);return}
+      for(const g2 of g){
+        const p=(yol?yol+"/":"")+g2.name;
+        if(g2.isFile)out.push({path:p,entry:g2});
+        else if(g2.isDirectory)await dizinOku(g2,p,out);
+      }
+      oku();
+    },()=>res(out));   /* okuma reddedilirse (izin) elimizdekiyle devam */
+    oku();
+  });
+}
+async function klasorIngest(girisler){
+  const toplanan=[];
+  for(const g of girisler){
+    if(g.isDirectory)await dizinOku(g,"",toplanan);
+    else toplanan.push({path:g.name,entry:g});
+  }
+  if(!toplanan.length){uyar("⚠ Klasörden hiç dosya okunamadı. Klasörü \"Klasör\" düğmesiyle seçmeyi deneyin.");return}
+  const E=[],atlanan=[];
+  for(const {path,entry} of toplanan){
+    if(SKIP.test(path))continue;
+    let f;try{f=await new Promise((res,rej)=>entry.file(res,rej))}catch(err){continue}
+    const r=await metinAl(path,f.size,()=>f.text());
+    if(r.neden==="boyut")atlanan.push(path);
+    E.push({path,size:f.size,text:r.t,okunmadi:r.okunmadi,neden:r.neden});
+  }
+  if(!E.length){uyar("⚠ Bırakılan klasörde okunacak dosya bulunamadı (hepsi atlanan klasör/uzantı).");return}
+  if(atlanan.length)uyar("⚠ "+atlanan.length+" dosya çok büyük ("+(BUYUK/1e6)+" MB üstü), içeriği okunmadı — haritada görünür, bağı hesaplanmaz");
+  else uyar("📁 Klasör bırakıldı · "+E.length+" dosya okundu ("+toplanan.length+" girdi tarandı)");
+  build(E);
+}
+addEventListener("dragover",e=>e.preventDefault());
+addEventListener("drop",e=>{
+  e.preventDefault();
+  const dt=e.dataTransfer,girisler=[];let klasor=false;
+  /* Entry'ler olay biterken geçersizleşir: hemen topla, sonra asenkron oku. */
+  for(const it of (dt.items?[...dt.items]:[])){
+    if(it.kind!=="file")continue;
+    const g=it.webkitGetAsEntry?it.webkitGetAsEntry():null;
+    if(g){girisler.push(g);if(g.isDirectory)klasor=true}
+  }
+  if(klasor)return klasorIngest(girisler);
+  // Entry bilgisi yoksa (tarayıcı desteklemiyorsa) dosya listesiyle devam; klasörse tek kutu olur → uyar.
+  if(dt.files&&dt.files.length===1&&dt.files[0].size===4096&&!dt.files[0].type)
+    return uyar("⚠ Bu bir klasör gibi görünüyor ve tarayıcı klasörü okuyamadı. Klasörü \"Klasör\" düğmesiyle seçin.");
+  ingest(dt.files);
+});
+const KOD_EXT=new Set(["py","js","mjs","ts","tsx","jsx","kt","kts","java","go","rs","rb","php","cs","c","h","cpp","hpp","cc","sh","sql","toml"]);
+/* ---- GİRİŞ NOKTASI: manifest + test dosyası ayrımı ----
+   "Kimse çağırmıyor" tek başına giriş noktası demek değil: gelen bağların hepsi
+   tahminse (dosya adı benzerliği) dosya yine giriş olabilir; test dosyaları geri plana düşer. */
+function hepsiTahmin(x){return x.inn.size>0&&[...x.inn].every(k=>GUVEN.get(k+"-"+x.id)==="tahmin")}
+function testDosyasi(x){return /(^|\/)(test|androidTest|__tests__|spec)(\/|$)/i.test(x.path)||/(Test|Tests|Spec)\.[a-z]+$/i.test(x.name)}
+function manifestGirisleri(){
+  const m=G.find(x=>/AndroidManifest\.xml$/i.test(x.path)&&x.text);
+  if(!m)return new Set();
+  const s=new Set();let r;const re=/<activity[\s\S]{0,300}?android:name\s*=\s*"([^"]+)"/g;
+  while(r=re.exec(m.text)){const a=r[1].split(".").pop();if(a)s.add(a.toLowerCase())}
+  return s;
+}
+function girisNoktalari(){
+  const man=manifestGirisleri();
+  const manMi=x=>man.has((x.name||"").replace(/\.[^.]+$/,"").toLowerCase());
+  const puan=x=>{
+    let p=0;
+    if(manMi(x))p+=100;
+    const r=roleOf(x).short;
+    if(r==="yapılandırma"||r==="belge"||x.okunmadi)p-=100;
+    if(testDosyasi(x))p-=50;
+    p+=Math.min(10,x.out.size);
+    if(hepsiTahmin(x))p+=5;
+    return p;
+  };
+  return G.filter(x=>!x.okunmadi&&(manMi(x)||(x.out.size&&(!x.inn.size||hepsiTahmin(x))))).slice().sort((a,b)=>puan(b)-puan(a));
+}
+function girisRolu(x){return manifestGirisleri().has((x.name||"").replace(/\.[^.]+$/,"").toLowerCase())}
+function roleOf(x){
+  if(heading)return{short:x.ext,long:"",risk:""};
+  if(x.okunmadi){
+    if((x.nd||"")==="uzanti")return{short:"okunmadı · uzantı",long:"Bu dosyanın uzantısı metin olarak okunmuyor ("+(x.ext||"uzantısız")+"), içeriği ölçülmedi. Bu yüzden \"bağımsız\" ya da \"kullanılmıyor\" hükmü VERİLMEZ. Rolü öğrenmek için dosyayı elle aç.",risk:"ölçülmedi"};
+    if((x.nd||"")==="ikili")return{short:"okunmadı · ikili",long:"Dosyada metin dışı baytlar var (ikili içerik). Rol ve bağ hesaplanmadı; \"kullanılmıyor\" hükmü verilmez.",risk:"ölçülmedi"};
+    return{short:"içerik okunmadı",long:"Dosya 4 MB üzeri olduğu için içeriği okunmadı; rol ve bağ hesaplanmadı. Bu kutu \"kullanılmıyor\" demek değildir — ölçülmemiştir. Dosyayı küçük parçalara bölerek ya da sema_ast.py ile harita üreterek analiz et.",risk:"ölçülmedi"};
+  }
+  const i=x.inn.size,o=x.out.size;
+  if(AYAR_EXT.has((x.ext||"").toLowerCase()))return{short:"yapılandırma",long:"Derleme/bağımlılık/ayar tanımı. Kodu proje dosyalarına bağ kurmaz, o yüzden \"kullanılmıyor\" hükmü verilmez — rolü bağımlılık ve sürüm listesidir. Dokunursan derleme etkilenir.",risk:"orta"};
+  if(!i&&!o&&!KOD_EXT.has((x.ext||"").toLowerCase()))return{short:"belge",long:"Kod dosyası değil (belge ya da ayar dosyası). Kod bağı kurmaz; rol ve risk hükmü verilmez — \"kullanılmıyor\" demek değildir, ölçülecek kod bağı yoktur.",risk:"—"};
+  if(!i&&!o)return{short:"bağımsız",long:"Hiçbir dosyayla bağlantısı bulunamadı. Ya tek başına çalışan bir araç ya da artık kullanılmayan eski bir dosya olabilir.",risk:"düşük"};
+  if(!i)return{short:"başlatıcı",long:"Kimse bunu çağırmıyor, o başkalarını çağırıyor. Genelde programı başlatan ya da bir işi baştan sona yöneten dosya budur.",risk:"orta"};
+  if(!o)return{short:"temel parça",long:"Başka dosyalara ihtiyaç duymuyor ama diğerleri onu kullanıyor. Veri, ayar ya da ortak yardımcı işler burada olur.",risk:i>=3?"yüksek":"orta"};
+  return{short:"aracı",long:"Hem üstteki bir dosya onu çağırıyor hem de o alttaki dosyaları çağırıyor. Zincirin ortasında bir halka.",risk:i>=3?"yüksek":"orta"};
+}
+function names(s){return [...s].map(i=>G[i].name).join(", ")}
+function guide(x){
+  if(heading)return"";
+  const r=roleOf(x);
+  let t='<div class="role"><b>Rolü: '+r.short+'</b><br>'+r.long+'<br>';
+  if(x.out.size)t+='• Çalışmak için şunlara ihtiyacı var: '+esc(names(x.out))+'. Onlar bozulursa bu da bozulur.<br>';
+  if(x.out.size){const kes=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kesin").length;t+='• Bağ güveni: '+kes+' kesin, '+(x.out.size-kes)+' tahmin. Tahmin olanı koda bakmadan doğru sayma.<br>'}
+  if(x.inn.size)t+='• Bunu şunlar kullanıyor: '+esc(names(x.inn))+'. Bunu değiştirirsen ya da silersen onlar etkilenir.<br>';
+  if(hepsiTahmin(x))t+='• Gelen bağların hepsi <b>tahmin</b> (yalnız dosya adı benzerliği) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
+  return t+'• Dokunma riski: <b>'+r.risk+'</b> (kaç dosyanın ona bağlı olduğuna göre)</div>';
+}
+function modelMetni(){
+  const NL=String.fromCharCode(10),N=G.slice().sort((a,b)=>a.L-b.L||a.path.localeCompare(b.path));
+  const nm=s=>[...s].map(i=>G[i].name).join(",")||"-";
+  const anlamli=s=>s&&!/^Dosyada açıklama|^Bu başlığın altında|Ne yaptığını öğrenmek için/.test(s)?s:"";
+  const O=["# "+N.length+" dosya · "+N.reduce((s,x)=>s+x.out.size,0)+" bağlantı",""];
+  let son=-1;
+  N.forEach(x=>{
+    if(x.L!==son){O.push("## Katman "+(x.L+1));son=x.L}
+    const r=roleOf(x),s=anlamli(x.sum);
+    O.push("- "+x.path+" ["+r.short+"]"+(s?" "+s.slice(0,70):"")+(x.out.size?" → "+nm(x.out):""));
+  });
+  return O.join(NL);
+}
+$("#mv").onclick=async()=>{
+  if(!G.length)return alert("Önce bir klasör ya da dosya ekle.");
+  const t=modelMetni();
+  try{await navigator.clipboard.writeText(t);alert("Kopyalandı · "+t.length+" karakter · "+G.length+" dosya. Yeni sohbete yapıştır.")}
+  catch(e){prompt("Panoya yazılamadı, elle kopyala:",t)}
+};
+document.addEventListener("click",e=>{
+  const lbl=e.target.closest("text.lbl");
+  if(!lbl||heading)return;
+  const k=+lbl.dataset.k;
+  if(KATLI.has(k))KATLI.delete(k);else KATLI.add(k);
+  draw();
+});
+function buildGuide(){
+  const NL=String.fromCharCode(10),O=[],N=G.slice();
+  const nm=s=>[...s].map(i=>G[i].name).join(", ")||"yok";
+  const nmT=(s,from)=>[...s].map(i=>G[i].name+(GUVEN.get(from+"-"+i)==="tahmin"?" (tahmin)":"")).join(", ")||"yok";
+  const E=N.reduce((s,x)=>s+x.out.size,0);
+  const top=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size>=2).slice(0,6);
+  const ent=girisNoktalari().slice(0,5),orp=N.filter(x=>roleOf(x).short==="bağımsız"),
+        ayar=N.filter(x=>roleOf(x).short==="yapılandırma"),
+        okuU=N.filter(x=>x.okunmadi&&x.nd==="uzanti"),okuI=N.filter(x=>x.okunmadi&&x.nd==="ikili"),
+        okuB=N.filter(x=>x.okunmadi&&x.nd!=="uzanti"&&x.nd!=="ikili");
+  O.push("# Şema Haritası","","> Şema Üretici ile otomatik üretildi (harita.py'nin PROJE-HARITASI.md'sinden ayrı dosya). **Yapay zeka modelleri için:** bir şey aramadan önce bu dosyayı oku. “Sembol dizini” ve “Dosya kartları” bölümlerinden doğru dosyayı bul, sonra yalnızca o dosyayı aç. Bağlantılar otomatik tahmindir, kesin değildir.","");
+  O.push("## Özet","- "+N.length+" dosya, "+E+" bağlantı","- Giriş noktaları (manifestte bildirilen ya da kimse çağırmıyor): "+(ent.map(x=>x.path).join(", ")||"yok"),"- Dokunması riskli (çok dosya buna bağlı): "+(top.map(x=>x.name+" ("+x.inn.size+")").join(", ")||"yok"),"- Bağımsız (hiçbir bağlantı yok): "+(orp.map(x=>x.path).join(", ")||"yok"),"- Yapılandırma (kod bağı kurmaz, \"kullanılmıyor\" hükmü verilmez): "+(ayar.map(x=>x.path).join(", ")||"yok"),"- Okunmayan uzantı (rol/bağ hükmü VERİLMEDİ): "+(okuU.map(x=>x.path).join(", ")||"yok"),"- İkili içerik (rol/bağ hükmü VERİLMEDİ): "+(okuI.map(x=>x.path).join(", ")||"yok"),"- İçeriği okunmayan 4 MB üstü (rol/bağ hükmü VERİLMEDİ): "+(okuB.map(x=>x.path).join(", ")||"yok"),"");
+  O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (tahmin): bu bağ yalnız dosya adı benzerliğinden çıkarıldı; koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
+  O.push("## Katmanlar");
+  const by={};N.forEach(x=>(by[x.L]=by[x.L]||[]).push(x));
+  Object.keys(by).sort((a,b)=>a-b).forEach(k=>{O.push("### Katman "+(+k+1));by[k].forEach(x=>O.push("- "+x.path+" ["+roleOf(x).short+"]: "+x.sum.slice(0,140)));O.push("")});
+  O.push("## Sembol dizini (sınıf veya fonksiyon → dosya)");
+  N.forEach(x=>(x.sembol||[]).forEach(s=>O.push("- "+s.ad+" → "+x.path+":"+s.satir)));O.push("");
+  O.push("## Dosya kartları");
+  N.forEach(x=>{const r=roleOf(x);O.push("### "+x.path,"- Rol: "+r.short+(r.risk?" · dokunma riski: "+r.risk:""),"- Ne yapar: "+x.sum,"- İçerdiği: "+((x.sembol||[]).map(s=>s.ad+":"+s.satir).join(", ")||"-"),"- Kullandığı: "+nmT(x.out,x.id),"- Kullanan: "+nm(x.inn),"- Boyut: "+x.lines+" satır","- Görev tarifi: "+tarifTekSatir(x),"")});
+  return O.join(NL);
+}
+$("#gd").onclick=()=>{
+  if(!G.length)return alert("Önce bir klasör ya da dosya ekle.");
+  indir("SEMA-HARITASI.md",buildGuide(),"text/markdown");
+};
+const DEMO=[
+{path:"main.py",text:'"""Giriş noktası: ağ geçidini ve nabız servisini başlatır."""\nimport gateway\nimport pulse\n'},
+{path:"core/gateway.py",text:'# Telegram köprüsü ve model yönlendirme\nimport db\nfrom pulse import tick\ndef run(): pass\n'},
+{path:"core/pulse.py",text:'# Sağlık taraması, üç saniyede bir çalışır\nimport db\ndef tick(): pass\n'},
+{path:"core/db.py",text:'"""state.db üzerine ince katman."""\ndef q(): pass\n'},
+{path:"scripts/mail_txt.py",text:'# Uzun yanıtı e-postaya çevirir\nimport db\n'},
+{path:"scripts/eski_test.py",text:'# Kullanılmayan eski deneme\nprint(1)\n'},
+{path:"README.md",text:'# Demo\nmain.py başlatır, scripts/mail_txt.py yardımcıdır.\n'}
+];
+$("#demo").onclick=()=>build(DEMO.map(d=>({...d,size:d.text.length})));
+
+/* ===== DÖRT KUTU KARTI: NE · NEREDE · KİMİNLE · NEREYE ===== */
+function kartGuncelle(){
+  const k=document.getElementById("k4");
+  if(!k)return;
+  if(!G.length){k.hidden=true;const p=document.getElementById("png");if(p)p.hidden=true;const a0=document.getElementById("anahtar");if(a0)a0.hidden=true;return}
+  k.hidden=false;
+  const N=G,E=N.reduce((s,x)=>s+x.out.size,0);
+  const kt=(ad,deger,ipucu,hedef)=>'<div class="k4i"'+(hedef!==undefined&&hedef!==""?' data-go="'+hedef+'"':'')+'><b>'+ad+'</b><span>'+deger+'</span><i>'+ipucu+'</i></div>';
+  if(heading){
+    k.innerHTML=kt("NE",N.length+" başlık","tek not dosyası · başlık haritası")+
+      kt("NEREDE",esc(N[0]?N[0].name:""),"belgenin iç yapısı")+
+      kt("KİMİNLE","alt başlıklar","üst başlık → alt başlık",N.length>1?N[1].id:"")+
+      kt("NEREYE",esc(N[0]?N[0].name:""),"en tepeden başla",N.length?N[0].id:"");
+  }else{
+    /* NE: dil dağılımı + bağ sayısı */
+    const dk={};N.forEach(x=>dk[x.ext]=(dk[x.ext]||0)+1);
+    const dil=Object.entries(dk).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([e,c])=>e+" "+c).join(" · ");
+    /* NEREDE: en yoğun klasör + katman sayısı */
+    const kl={};N.forEach(x=>{const d=x.path.includes("/")?x.path.slice(0,x.path.lastIndexOf("/")):"(kök)";kl[d]=(kl[d]||0)+1});
+    const yog=Object.entries(kl).sort((a,b)=>b[1]-a[1])[0]||["(kök)",0];
+    const katman=Math.max(...N.map(x=>x.L))+1;
+    /* KİMİNLE: en çok kullanılan dosyalar */
+    const kim=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size>0).slice(0,2);
+    /* NEREYE: giriş noktaları — manifestte bildirilen öne, test dosyaları geriye */
+    const giris=girisNoktalari().slice(0,2);
+    k.innerHTML=
+      kt("NE",N.length+" dosya · "+E+" bağ",dil)+
+      kt("NEREDE",esc(yog[1]+" dosya"),esc(yog[0])+" · "+katman+" katman")+
+      kt("KİMİNLE",kim.length?kim.map(x=>esc(x.name)+" ("+x.inn.size+")").join(" · "):"—","en çok kullanılan",kim.length?kim[0].id:"")+
+      kt("NEREYE",giris.length?esc(giris[0].name):"giriş yok",giris.length?(girisRolu(giris[0])?"manifestte bildirilen başlatıcı → akış":"buradan başla → akış"):"bağlantı yok",giris.length?giris[0].id:"");
+  }
+  /* renk anahtarı: renk ne anlatıyor */
+  const an=document.getElementById("anahtar");
+  if(an){
+    an.hidden=heading;
+    if(!heading){
+      const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bağımsız","bağlantısız"]];
+      an.innerHTML=R.map(([r,ac])=>'<span><i style="background:'+ROL_RENK[r]+'"></i>'+r+'<em>· '+ac+'</em></span>').join("")
+        +'<span><i style="background:transparent;border:1px solid var(--mut)"></i>kutu hacmi = satır sayısı</span>'
+        +'<span><i style="background:transparent;box-shadow:0 0 8px #fff6"></i>parlayan şerit = risk yüksek</span>'
+        +'<span><i style="background:transparent;border:1px solid #8A93A6"></i>gri = belge/yapılandırma<em>· rol hükmü verilmez</em></span>'
+        +'<span><i style="background:transparent;border:1px dotted var(--mut)"></i>noktalı gri = içerik okunmadı<em>· uzantı / 4 MB+ / ikili</em></span>';
+    }
+  }
+  k.querySelectorAll(".k4i[data-go]").forEach(el=>{
+    el.onclick=()=>{const i=+el.dataset.go;if(isNaN(i))return;pick(i);
+      const n=document.querySelector('.nd[data-i="'+i+'"]');if(n)n.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})};
+  });
+  const p=document.getElementById("png");if(p)p.hidden=false;
+}
+
+/* ===== PNG: haritanın resmini indir (ek dış kütüphane yok) ===== */
+function pngOlustur(){
+  const cv=$("#cv");
+  const gen=Math.max(360,cv.offsetWidth||600), yuk=Math.max(240,cv.offsetHeight||400), S=2;
+  const c=document.createElement("canvas");c.width=Math.round(gen*S);c.height=Math.round(yuk*S);
+  const g=c.getContext("2d");g.scale(S,S);
+  const cs=getComputedStyle(document.documentElement);
+  const bg=getComputedStyle(document.body).backgroundColor||"#ffffff";
+  const fg=(cs.getPropertyValue("--fg")||"#111").trim(),mut=(cs.getPropertyValue("--mut")||"#666").trim(),edg=(cs.getPropertyValue("--edge")||"#888").trim();
+  g.fillStyle="rgba(0,0,0,0)";g.clearRect(0,0,c.width,c.height);
+  g.fillStyle=bg;if(bg==="rgba(0, 0, 0, 0)"||bg==="transparent"){g.fillStyle="#ffffff"}g.fillRect(0,0,c.width,c.height);
+  /* katman etiketleri */
+  const ly={};G.forEach(x=>{if(KATLI.has(x.L))return;ly[x.L]=Math.min(ly[x.L]??1e9,x.y)});
+  g.font='11px "DejaVu Sans",sans-serif';g.fillStyle=mut;
+  Object.keys(ly).sort((a,b)=>a-b).forEach((k,i,a)=>{
+    const rl=new Set(G.filter(x=>x.L===+k).map(x=>roleOf(x).short));
+    const et=(+k+1)+". katman"+(i===0&&rl.size===1&&rl.has("başlatıcı")?" · başlatıcılar":(i===a.length-1&&a.length>1&&rl.size===1&&rl.has("temel parça")?" · temel parçalar":""));
+    g.fillText(et,6,ly[k]-6);
+  });
+  /* kenarlar */
+  G.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
+    const B=G[b];if(!B||KATLI.has(B.L))return;
+    const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
+    const tah=GUVEN.get(a.id+"-"+b)==="tahmin";
+    g.save();g.strokeStyle=edg;g.lineWidth=1.2;g.globalAlpha=tah?0.35:0.6;g.setLineDash(tah?[4,4]:[]);
+    g.beginPath();g.moveTo(x1,y1);g.bezierCurveTo(x1,y1+d,x2,y2-d,x2,y2);g.stroke();g.restore();
+    g.save();g.fillStyle=edg;g.globalAlpha=tah?0.5:0.85;
+    g.beginPath();g.moveTo(x2-5,y2-9);g.lineTo(x2,y2);g.lineTo(x2+5,y2-9);g.closePath();g.fill();g.restore();
+  })});
+  /* kutular */
+  G.forEach(x=>{if(KATLI.has(x.L))return;
+    const renk=renkOf(x)||"#7C6EF5";
+    g.save();g.globalAlpha=0.16;g.fillStyle=renk;
+    g.beginPath();g.roundRect(x.x,x.y,x.w,x.h,10);g.fill();g.restore();
+    g.save();g.globalAlpha=1;g.strokeStyle=renk;g.lineWidth=1.5;
+    g.beginPath();g.roundRect(x.x,x.y,x.w,x.h,10);g.stroke();g.restore();
+    g.fillStyle=renk;g.globalAlpha=.9;g.fillRect(x.x+1,x.y+1,x.w-2,2);g.globalAlpha=1;
+    g.fillStyle=renk;g.font='bold 10px "DejaVu Sans",sans-serif';
+    let ad=x.name.toUpperCase();while(ad.length>4&&g.measureText(ad).width>x.w-16)ad=ad.slice(0,-2)+"…";
+    g.fillText(ad,x.x+8,x.y+22);
+    g.fillStyle=mut;g.font='9px "DejaVu Sans",sans-serif';
+    const alt=(heading?x.ext:roleOf(x).short)+(x.lines?" · "+x.lines+" satır":"");
+    g.fillText(alt,x.x+8,x.y+40);
+  });
+  /* alt damga */
+  g.fillStyle=mut;g.font='10px "DejaVu Sans",sans-serif';
+  g.fillText("Şema Üretici · kesikli ok = tahmin",8,c.height/S-8);
+  return c;
+}
+function pngVeri(){const c=pngOlustur();return c.toDataURL("image/png")}
+function pngIndir(){
+  const c=pngOlustur();
+  const kaydet=(blob)=>{const u=URL.createObjectURL(blob);const a=document.createElement("a");
+    a.href=u;a.download="proje-haritasi.png";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),5000)};
+  if(c.toBlob)c.toBlob(kaydet,"image/png");else{const u=c.toDataURL("image/png");const a=document.createElement("a");a.href=u;a.download="proje-haritasi.png";a.click()}
+}
+
+/* ===== MODEL İÇİN GÖREV TARİFİ ===== */
+function tarifMetni(x){
+  const oku=[...x.out].map(i=>G[i].path), etk=[...x.inn].map(i=>G[i].path);
+  const semb=(x.sembol||[]).slice(0,8).map(s=>s.ad+" :"+s.satir).join(", ");
+  const L=["DOSYA: "+x.path+(x.lines?" ("+x.lines+" satır)":"")];
+  L.push("ROL: "+roleOf(x).short+" · dokunma riski: "+roleOf(x).risk);
+  if(oku.length)L.push("ÖNCE OKU: "+oku.slice(0,8).join(", "));
+  if(etk.length)L.push("DEĞİŞTİRİRSEN ETKİLENİR ("+etk.length+"): "+etk.slice(0,8).join(", "));
+  if(semb)L.push("İÇİNDEKİLER (ad:satır): "+semb);
+  L.push("KURAL: okumadığın dosyaya dokunma; tahmin bağını koda bakarak doğrula; değişiklikten sonra çağıranları derle/çalıştır.");
+  return L.join("\n");
+}
+function tarifTekSatir(x){
+  const oku=[...x.out].map(i=>G[i].name).slice(0,4).join("+")||"yok";
+  return "önce oku: "+oku+"; değiştirirsen "+x.inn.size+" dosya etkilenir; risk "+roleOf(x).risk;
+}
+function gorevTarifi(x){
+  if(heading)return"";
+  const oku=[...x.out].map(i=>G[i].name), etk=[...x.inn].map(i=>G[i].name);
+  const risk=roleOf(x).risk;
+  if(x.okunmadi)
+    return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Dosya 4 MB üzeri olduğu için içeriği okunmadı; bağ ve rol hesaplanmadı. <b>Bağlantısız sayma:</b> "kullanılmıyor" hükmü burada veri yokluğundan doğar. Modele: "önce dosyayı küçük parçalara böl ya da sema_ast.py ile harita üret, sonra karar ver" de.</div>';
+  if(!oku.length&&!etk.length)
+    return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Bağlantısı yok: ya tek başına çalışan bir araç ya da kullanılmayan dosya. Modele: “çağrıldığı yeri ara; bulunamazsa silme adayıdır” de.</div>';
+  let h='<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3><ol>';
+  if(oku.length)h+='<li><b>Önce oku:</b> '+esc(oku.slice(0,6).join(", "))+(oku.length>6?" +"+(oku.length-6):"")+' — bunlar olmadan dosya anlaşılmaz.</li>';
+  if(etk.length)h+='<li><b>Değiştirirsen etkilenir ('+etk.length+'):</b> '+esc(etk.slice(0,6).join(", "))+(etk.length>6?" +"+(etk.length-6):"")+'</li>';
+  h+='<li><b>Dokunma riski:</b> '+risk+(risk==="yüksek"?" — değişiklikten sonra tüm çağıranları derle/çalıştır":"")+'</li>';
+  h+='<li><b>Doğrula:</b> '+(etk.length?'değişiklikten sonra '+esc(etk.slice(0,3).join(", "))+' yeniden derle':'bu dosya başlatıcı (çağıranı yok): derle ve uygulamayı çalıştır')+'</li>';
+  if(x.sembol&&x.sembol.length)h+='<li><b>Satır çapası:</b> '+esc(x.sembol.slice(0,5).map(s=>s.ad+":"+s.satir).join(", "))+'</li>';
+  h+='</ol><button class="btn" id="gtKopya" style="margin-top:6px">📋 Tarifi kopyala</button></div>';
+  return h;
+}
+
+
+/* ===== GRAF DIŞA AKTARIMI (sorgu/etki komutları için) ===== */
+function grafVerisi(){
+  const N=G;
+  return {
+    surum:2,
+    uretildi:(()=>{const d=new Date(),p2=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes())})(),
+    dosya:N.map(x=>({
+      i:x.id, ad:x.name, yol:x.path, ext:x.ext, satir:x.lines||0,
+      rol:heading?"":roleOf(x).short, risk:heading?"":roleOf(x).risk,
+      katman:(x.L|0)+1, sembol:(x.sembol||[]).slice(0,40), okunmadi:!!x.okunmadi, neden:x.nd||""
+    })),
+    kenar:(()=>{const r=[];N.forEach(a=>a.out.forEach(b=>r.push({a:a.id,b:b,tip:GUVEN.get(a.id+"-"+b)||"tahmin"})));return r})()
+  };
+}
+
+/* ===== KALICILIK: localStorage + JSON ===== */
+const ANAHTAR="semaSonHarita";
+function kaydet(E){
+  const b=document.getElementById("geriBilgi");
+  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:d.text}))}));
+    if(b&&b.textContent.indexOf("Son harita kaydedilemedi")>=0){b.hidden=true;b.textContent=""}
+  }catch(e){if(b){b.hidden=false;b.textContent="↺ Son harita kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur"}}}
+function indir(ad,metin,tip){
+  const blob=new Blob([metin],{type:tip||"text/plain;charset=utf-8"});
+  const u=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=u;a.download=ad;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),5000);
+  return blob.size;
+}
+function jsonIndir(){
+  if(!G.length)return alert("Önce bir klasör ya da dosya ekle.");
+  const g=grafVerisi();
+  const boy=indir("sema-graph.json",JSON.stringify(g),"application/json");
+  const b=document.getElementById("geriBilgi");
+  if(b){b.hidden=false;b.textContent="💾 sema-graph.json indirildi · "+g.dosya.length+" dosya · "+g.kenar.length+" bağ · şema sürüm "+g.surum+" · "+Math.round(boy/1024)+" KB"};
+}
+/* Grafik (AST ya da araç) JSON'unu doğrudan yükle: dosya metni olmadan harita çizilir */
+function grafYukle(j){
+  const D=j.dosya||[], K=j.kenar||[];
+  if(!D.length)return;
+  heading=false;KATLI.clear();sel=-1;
+  G=D.map((d,i)=>({id:i,name:d.ad,path:d.yol||d.ad,ext:(d.ext||String(d.ad).split(".").pop()||""),
+    group:(d.yol||"").includes("/")?(d.yol||"").split("/")[0]:"(kök)",text:null,size:0,
+    lines:d.satir||0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
+    sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):"Haritadan yüklendi ("+(j.kaynak||"kaynak")+"). Dosya metni yok; içerik için dosyayı aç.",
+    defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi}));
+  GUVEN.clear();
+  K.forEach(e=>{if(G[e.a]&&G[e.b]){G[e.a].out.add(e.b);G[e.b].inn.add(e.a);
+    GUVEN.set(e.a+"-"+e.b,e.tip==="tahmin"?"tahmin":"kesin")}});
+  try{localStorage.removeItem(ANAHTAR)}catch(err){}
+  draw();kartGuncelle();
+  ["gd","png","jdis","jicL","mv"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=false});
+  const b=document.getElementById("geriBilgi");
+  if(b){b.hidden=false;b.textContent="🧩 Grafik yüklendi · "+(j.kaynak||"kaynak")+" · "+G.length+" dosya · "+K.length+" bağ · "+(j.uretildi||"")}
+}
+function jsonYukle(file){
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const j=JSON.parse(r.result);
+    if(j&&j.kenar&&j.dosya&&j.dosya.length&&j.dosya[0]&&j.dosya[0].i!==undefined){grafYukle(j);return}
+    const D=j.D||j.dosyalar||j;
+    if(!Array.isArray(D))throw new Error("dosya listesi bulunamadı");
+    build(D.map(d=>({path:d.path||d.ad||"dosya",size:d.size||(d.text?d.text.length:0),text:d.text||null})));
+  }catch(e){alert("JSON okunamadı: "+e.message)}};
+  r.readAsText(file);
+}
+
+/* ===== BAĞLA ===== */
+const _buildOnce=build;
+build=function(E){
+  _buildOnce(E);kartGuncelle();kaydet(E);
+  ["jdis","jicL"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=!G.length});
+};
+const _pngBtn=document.getElementById("png");if(_pngBtn)_pngBtn.onclick=pngIndir;
+const _jdis=document.getElementById("jdis");if(_jdis)_jdis.onclick=jsonIndir;
+const _jic=document.getElementById("jic");
+if(_jic)_jic.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)jsonYukle(f);e.target.value=""};
+kartGuncelle();
+
+/* son haritayı geri yükle */
+(function(){
+  try{
+    const s=JSON.parse(localStorage.getItem(ANAHTAR)||"null");
+    if(!s||!s.D||!s.D.length)return;
+    build(s.D.map(d=>({path:d.path,size:d.size,text:d.text})));
+    const b=document.getElementById("geriBilgi");
+    if(b){b.hidden=false;b.textContent="↺ Son harita geri yüklendi · "+s.D.length+" dosya · "+new Date(s.t).toLocaleString("tr-TR")+" · yeni dosya için sürükle ya da klasör seç"}
+  }catch(e){}
+})();
+
+
+</script></body></html>

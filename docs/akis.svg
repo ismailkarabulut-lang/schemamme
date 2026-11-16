@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="232" viewBox="0 0 900 232" role="img" aria-label="Şema Üretici akışı: klasör bırak → dosyalar okunur → rol ve bağ → katmanlı harita → panel ve çıktı">
+  <style>
+    .arka{fill:#0B0D12}
+    .izgara{fill:#141826}
+    .dugum{opacity:0;animation:düğümGir .7s ease-out forwards}
+    .dugum rect{fill:#121726;stroke:#232a3d;stroke-width:1}
+    .ad{font-family:'Segoe UI',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.10em;fill:#FFFFFF}
+    .alt{font-family:'Segoe UI',system-ui,sans-serif;font-size:8.6px;letter-spacing:.05em;fill:#8A93A6}
+    .no{font-family:'Segoe UI',system-ui,sans-serif;font-size:8px;letter-spacing:.22em;fill:#5c6478}
+    .ok{stroke:#2A3350;stroke-width:1.6;fill:none;stroke-dasharray:5 7;animation:akis 1.3s linear infinite}
+    .ray{stroke:none;fill:none}
+    .kızak{stroke:#1b2233;stroke-width:1;fill:none;stroke-dasharray:2 6}
+    .serit{opacity:0;animation:şeritGir .5s ease-out forwards}
+    .başlık{font-family:'Segoe UI',system-ui,sans-serif;font-size:9px;letter-spacing:.30em;fill:#6b7387}
+    .nokta{fill:#2DD4BF}
+    @keyframes düğümGir{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes şeritGir{from{opacity:0}to{opacity:1}}
+    @keyframes akis{to{stroke-dashoffset:-24}}
+    @keyframes nabız{0%,100%{stroke-opacity:.35}50%{stroke-opacity:.95}}
+    .vurgu{animation:nabız 2.6s ease-in-out infinite}
+  </style>
+
+  <rect class="arka" x="0" y="0" width="900" height="232" rx="14"/>
+  <rect class="izgara" x="0" y="0" width="900" height="34" rx="14"/>
+  <rect class="izgara" x="0" y="24" width="900" height="10"/>
+  <text class="başlık" x="18" y="22">ŞEMA ÜRETİCİ · AKIŞ</text>
+  <text class="başlık" x="882" y="22" text-anchor="end" style="fill:#4FA8D5">YEREL · TARAYICISIZ PENCERE · KOD GÖNDERİLMEZ</text>
+
+  <!-- bağlantı çizgileri -->
+  <path class="ok" d="M162 116 H192"/>
+  <path class="ok" d="M330 116 H360"/>
+  <path class="ok" d="M498 116 H528"/>
+  <path class="ok" d="M666 116 H696"/>
+
+  <!-- düğüm 1 -->
+  <g class="dugum" style="animation-delay:.05s">
+    <rect x="12" y="76" width="150" height="80" rx="10"/>
+    <rect x="12" y="76" width="3" height="80" fill="#7C6EF5" rx="1.5"/>
+    <text class="no" x="26" y="96">01 · GİRDİ</text>
+    <text class="ad" x="26" y="116">KLASÖR</text>
+    <text class="alt" x="26" y="131">sürükle ya da düğme</text>
+    <text class="alt" x="26" y="144" style="fill:#7C6EF5">zip · çok dosya · .md</text>
+  </g>
+
+  <!-- düğüm 2 -->
+  <g class="dugum" style="animation-delay:.65s">
+    <rect x="180" y="76" width="150" height="80" rx="10"/>
+    <rect x="180" y="76" width="3" height="80" fill="#4FA8D5" rx="1.5"/>
+    <text class="no" x="194" y="96">02 · OKUMA</text>
+    <text class="ad" x="194" y="116">DOSYALAR</text>
+    <text class="alt" x="194" y="131">uzantı · 4 MB · ikili</text>
+    <text class="alt" x="194" y="144" style="fill:#4FA8D5">okunmayan = ölçülmedi</text>
+  </g>
+
+  <!-- düğüm 3 -->
+  <g class="dugum" style="animation-delay:1.25s">
+    <rect x="348" y="76" width="150" height="80" rx="10"/>
+    <rect x="348" y="76" width="3" height="80" fill="#2DD4BF" rx="1.5"/>
+    <text class="no" x="362" y="96">03 · ÇIKARIM</text>
+    <text class="ad" x="362" y="116">ROL + BAĞ</text>
+    <text class="alt" x="362" y="131">import · tanım · ad</text>
+    <text class="alt" x="362" y="144" style="fill:#2DD4BF">kesin — — tahmin</text>
+  </g>
+
+  <!-- düğüm 4 -->
+  <g class="dugum" style="animation-delay:1.85s">
+    <rect x="516" y="76" width="150" height="80" rx="10"/>
+    <rect x="516" y="76" width="3" height="80" fill="#EF9F27" rx="1.5"/>
+    <text class="no" x="530" y="96">04 · HARİTA</text>
+    <text class="ad" x="530" y="116">KATMANLAR</text>
+    <text class="alt" x="530" y="131">renk = rol</text>
+    <text class="alt" x="530" y="144" style="fill:#EF9F27">kutu hacmi = satır</text>
+  </g>
+
+  <!-- düğüm 5 -->
+  <g class="dugum" style="animation-delay:2.45s">
+    <rect x="684" y="76" width="204" height="80" rx="10"/>
+    <rect x="684" y="76" width="3" height="80" fill="#C77DFF" rx="1.5"/>
+    <text class="no" x="698" y="96">05 · ÇIKTI</text>
+    <text class="ad" x="698" y="116">KART · PANEL</text>
+    <text class="alt" x="698" y="131">görev tarifi · çağıranlar</text>
+    <text class="alt" x="698" y="144" style="fill:#C77DFF">SEMA-HARITASI.md · JSON · PNG</text>
+  </g>
+
+  <!-- canlı şerit: kızak + akan işaret (kutuların ALTINDAN geçer, yazıya dokunmaz) -->
+  <path class="kızak" d="M12 176 H888"/>
+  <path id="yol" class="ray" d="M12 176 H888"/>
+  <circle class="nokta" r="3.2">
+    <animateMotion dur="4.4s" repeatCount="indefinite" begin="0.6s">
+      <mpath xlink:href="#yol" xmlns:xlink="http://www.w3.org/1999/xlink"/>
+    </animateMotion>
+    <animate attributeName="opacity" values="0;1;1;1;0" dur="4.4s" repeatCount="indefinite" begin="0.6s"/>
+  </circle>
+
+  <!-- alt not -->
+  <text class="alt" x="18" y="200" style="fill:#5c6478">Noktalı çizgi = tahmin bağı · kesintisiz çizgi = import/tanım · gri noktalı kutu = içerik okunmadı</text>
+  <text class="alt" x="18" y="215" style="fill:#3f4657">Hiçbir dosya yüklenmez; her şey bu makinede kalır.</text>
+
+  <!-- düğüm kenarlarında nefes alan vurgu -->
+  <g class="vurgu">
+    <rect x="12" y="76" width="150" height="80" rx="10" fill="none" stroke="#7C6EF5" stroke-width="1.2" opacity="0"/>
+  </g>
+</svg>
