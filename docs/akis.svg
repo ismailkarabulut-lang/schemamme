@@ -1,8 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="900" height="232" viewBox="0 0 900 232" role="img" aria-label="Şema Üretici akışı: klasör bırak → dosyalar okunur → rol ve bağ → katmanlı harita → panel ve çıktı">
   <style>
+    /* KURAL: hiçbir içerik opacity:0 ile başlamaz. SVG bir img etiketi içinde (GitHub README)
+       yüklenince animasyon donar; donduğunda diyagram eksiksiz görünmeli. Animasyon yalnız süs. */
     .arka{fill:#0B0D12}
     .izgara{fill:#141826}
-    .dugum{opacity:0;animation:düğümGir .7s ease-out forwards}
     .dugum rect{fill:#121726;stroke:#232a3d;stroke-width:1}
     .ad{font-family:'Segoe UI',system-ui,sans-serif;font-size:11px;font-weight:700;letter-spacing:.10em;fill:#FFFFFF}
     .alt{font-family:'Segoe UI',system-ui,sans-serif;font-size:8.6px;letter-spacing:.05em;fill:#8A93A6}
@@ -10,14 +11,9 @@
     .ok{stroke:#2A3350;stroke-width:1.6;fill:none;stroke-dasharray:5 7;animation:akis 1.3s linear infinite}
     .ray{stroke:none;fill:none}
     .kızak{stroke:#1b2233;stroke-width:1;fill:none;stroke-dasharray:2 6}
-    .serit{opacity:0;animation:şeritGir .5s ease-out forwards}
     .başlık{font-family:'Segoe UI',system-ui,sans-serif;font-size:9px;letter-spacing:.30em;fill:#6b7387}
     .nokta{fill:#2DD4BF}
-    @keyframes düğümGir{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes şeritGir{from{opacity:0}to{opacity:1}}
     @keyframes akis{to{stroke-dashoffset:-24}}
-    @keyframes nabız{0%,100%{stroke-opacity:.35}50%{stroke-opacity:.95}}
-    .vurgu{animation:nabız 2.6s ease-in-out infinite}
   </style>
 
   <rect class="arka" x="0" y="0" width="900" height="232" rx="14"/>
@@ -33,7 +29,7 @@
   <path class="ok" d="M666 116 H696"/>
 
   <!-- düğüm 1 -->
-  <g class="dugum" style="animation-delay:.05s">
+  <g class="dugum">
     <rect x="12" y="76" width="150" height="80" rx="10"/>
     <rect x="12" y="76" width="3" height="80" fill="#7C6EF5" rx="1.5"/>
     <text class="no" x="26" y="96">01 · GİRDİ</text>
@@ -43,7 +39,7 @@
   </g>
 
   <!-- düğüm 2 -->
-  <g class="dugum" style="animation-delay:.65s">
+  <g class="dugum">
     <rect x="180" y="76" width="150" height="80" rx="10"/>
     <rect x="180" y="76" width="3" height="80" fill="#4FA8D5" rx="1.5"/>
     <text class="no" x="194" y="96">02 · OKUMA</text>
@@ -53,7 +49,7 @@
   </g>
 
   <!-- düğüm 3 -->
-  <g class="dugum" style="animation-delay:1.25s">
+  <g class="dugum">
     <rect x="348" y="76" width="150" height="80" rx="10"/>
     <rect x="348" y="76" width="3" height="80" fill="#2DD4BF" rx="1.5"/>
     <text class="no" x="362" y="96">03 · ÇIKARIM</text>
@@ -63,7 +59,7 @@
   </g>
 
   <!-- düğüm 4 -->
-  <g class="dugum" style="animation-delay:1.85s">
+  <g class="dugum">
     <rect x="516" y="76" width="150" height="80" rx="10"/>
     <rect x="516" y="76" width="3" height="80" fill="#EF9F27" rx="1.5"/>
     <text class="no" x="530" y="96">04 · HARİTA</text>
@@ -73,7 +69,7 @@
   </g>
 
   <!-- düğüm 5 -->
-  <g class="dugum" style="animation-delay:2.45s">
+  <g class="dugum">
     <rect x="684" y="76" width="204" height="80" rx="10"/>
     <rect x="684" y="76" width="3" height="80" fill="#C77DFF" rx="1.5"/>
     <text class="no" x="698" y="96">05 · ÇIKTI</text>
@@ -95,9 +91,4 @@
   <!-- alt not -->
   <text class="alt" x="18" y="200" style="fill:#5c6478">Noktalı çizgi = tahmin bağı · kesintisiz çizgi = import/tanım · gri noktalı kutu = içerik okunmadı</text>
   <text class="alt" x="18" y="215" style="fill:#3f4657">Hiçbir dosya yüklenmez; her şey bu makinede kalır.</text>
-
-  <!-- düğüm kenarlarında nefes alan vurgu -->
-  <g class="vurgu">
-    <rect x="12" y="76" width="150" height="80" rx="10" fill="none" stroke="#7C6EF5" stroke-width="1.2" opacity="0"/>
-  </g>
 </svg>

@@ -4,3 +4,4 @@ docs/kareler/liste.txt
 *.log
 node_modules/
 .DS_Store
+docs/kareler/akis/

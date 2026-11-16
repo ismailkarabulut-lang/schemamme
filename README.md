@@ -2,11 +2,11 @@
 
 **Bir klasörü bırakıyorsun, kodun haritasını alıyorsun.** Yerel çalışır, dosyalar hiçbir yere gönderilmez.
 
-![Akış](docs/akis.svg)
+![Akış](docs/akis.gif)
 
 Ekranda olan biten — gerçek uygulama, gerçek bir Kotlin projesi (Theia-Spring, 53 dosya):
 
-![Uygulama](docs/akis.gif)
+![Uygulama](docs/uygulama.gif)
 
 ---
 
@@ -109,7 +109,7 @@ main.js             ← Electron kabuğu (pencere açar, dış bağlantıları t
 baslat.sh           ← Electron varsa onu, yoksa tarayıcıyı açar
 jszip.min.js        ← zip okuyucu, yerel (JSZip 3.10.1, MIT)
 icon.png            ← simge
-docs/               ← akış.svg · akis.gif · harita.png · kareler/
+docs/               ← akis.gif (akış animasyonu) · uygulama.gif (gerçek uygulama) · harita.png · akis.svg · kareler/
 ```
 
 ## Lisans
