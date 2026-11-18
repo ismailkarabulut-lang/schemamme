@@ -81,6 +81,12 @@ path.e.off{opacity:.08}
 #panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:rgba(255,255,255,.8);font-size:22px;cursor:pointer}
 .tag{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:rgba(255,255,255,.6)}
 .chip{border:1px solid rgba(255,255,255,.18);background:none;color:rgba(255,255,255,.85);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
+/* NOT kutusu: modelin kendi açıklamasını yazdığı yer (haritada kalır) */
+.nota{margin:10px 0 0;padding:8px 10px;border:1px solid rgba(124,110,245,.35);border-radius:8px;background:rgba(124,110,245,.07)}
+.nota h3{margin:0 0 6px;font-size:10px;letter-spacing:.14em;color:#9d8cff;font-weight:700}
+.nota h3 em{font-style:normal;color:rgba(255,255,255,.45);font-size:9px;letter-spacing:.04em}
+.nota textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:12.5px;padding:6px 8px}
+.nd.notlu b::after{content:" ✎";opacity:.85;font-weight:400}
 .legend{margin:10px auto 0;max-width:760px;color:var(--mut);font-size:11.5px;line-height:1.6;font-family:var(--fm);letter-spacing:.02em}.legend summary{cursor:pointer;letter-spacing:.14em;text-transform:uppercase}
 path.e.ah{fill:var(--edge);stroke:none;opacity:.9}path.e.ah.on{fill:#7c6cff;stroke:none;opacity:1}path.e.ah.off{opacity:.08}
 .role{margin:10px 0;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;line-height:1.6}
@@ -285,7 +291,7 @@ function fileGraph(E){
        sır dosyasının metni düğüme girmez, kayda yazılmaz. */
     const sir=SIR.test(e.path), tx=sir?null:e.text;
     return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
-      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext)};
+      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext),not:notVer(e.path)||(e.not||"")};
   });
   const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={},byPath={},byStemList={};
   const yolNorm=p=>String(p||"").replace(/\\/g,"/").replace(/\/{2,}/g,"/").replace(/^\.\//,"");
@@ -509,7 +515,7 @@ function draw(){
     if(KATLI.has(x.L))return;
     const c=renkOf(x),buyuk=!!x.okunmadi,orph=!heading&&!buyuk&&!x.inn.size&&!x.out.size;
     const canli=!heading&&!buyuk&&x.inn.size>=3,ri=!heading&&!buyuk&&roleOf(x).risk==="yüksek";
-    h+='<div class="nd'+(buyuk?" okunmadi":"")+(orph?" orph":"")+(canli?" canli":"")+(ri?" ri":"")+'" data-i="'+x.id+'" tabindex="0" title="'+esc(x.path)+'" style="left:'+x.x+'px;top:'+x.y+'px;width:'+x.w+'px;height:'+x.h+'px;--nc:'+c+';--rk:'+(ri?1:0)+';--fs:'+(x.t||0).toFixed(2)+';--i:'+Math.min(x.id,40)+'">'
+    h+='<div class="nd'+(buyuk?" okunmadi":"")+(orph?" orph":"")+(canli?" canli":"")+(ri?" ri":"")+(x.not?" notlu":"")+'" data-i="'+x.id+'" tabindex="0" title="'+esc(x.path)+'" style="left:'+x.x+'px;top:'+x.y+'px;width:'+x.w+'px;height:'+x.h+'px;--nc:'+c+';--rk:'+(ri?1:0)+';--fs:'+(x.t||0).toFixed(2)+';--i:'+Math.min(x.id,40)+'">'
       +"<b>"+esc(x.name)+"</b><small>"+(heading?esc(x.ext):roleOf(x).short)+(x.okunmadi?(x.nd==="uzanti"||x.nd==="ikili"||x.nd==="sir"?"":" · 4 MB+"):(x.lines?" · "+x.lines+" satır":""))+"</small><i class=\"p2\"></i></div>";
   });
   cv.innerHTML=h;
@@ -574,11 +580,21 @@ function pick(i){
     +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
     +'<span class="tag">'+esc(x.ext||"dosya")+"</span>"+(x.lines?'<span class="tag">'+x.lines+" satır</span>":"")+(kb?'<span class="tag">'+kb+"</span>":"")+'<span class="tag">'+esc(x.group)+"</span>"+status+(girisRolu(x)?'<span class="tag">manifestte bildirilen giriş noktası</span>':"")
     +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır</h3><span class="p">'+x.sembol.map(s=>esc(s.ad)+" ("+s.satir+")").join(", ")+"</span>":"")
+    +'<div class="nota"><h3>NOT <em>· bu dosya için · haritada kalır · JSON ve MD çıktısına girer</em></h3>'
+    +'<textarea id="notaKutu" rows="2" placeholder="Modele ya da gelecekteki sana not: neden dokunulmaz, neyi bozar, ne yapılacak…">'+esc(x.not||"")+"</textarea></div>"
     +gorevTarifi(x)
     +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
     +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
     ;
   P.style.display="block";
+  /* Not yazımı: 250 ms sonra kaydet (her tuşta localStorage'a yazmamak için). */
+  const nk=document.getElementById("notaKutu");
+  if(nk){
+    let z=0;
+    const isaretle=()=>{const el=document.querySelector('.nd[data-i="'+x.id+'"]');if(el)el.classList.toggle("notlu",!!x.not)};
+    nk.addEventListener("input",()=>{clearTimeout(z);z=setTimeout(()=>{notYaz(x.path,nk.value);x.not=String(nk.value||"").trim();isaretle();kartGuncelle()},250)});
+    nk.addEventListener("blur",()=>{clearTimeout(z);notYaz(x.path,nk.value);x.not=String(nk.value||"").trim();isaretle()});
+  }
 }
 function closeP(){sel=-1;$("#panel").style.display="none";view()}
 $("#cv").addEventListener("click",e=>{const n=e.target.closest(".nd");n?pick(+n.dataset.i):closeP()});
@@ -763,7 +779,7 @@ function buildGuide(){
   O.push("## Sembol dizini (sınıf veya fonksiyon → dosya)");
   N.forEach(x=>(x.sembol||[]).forEach(s=>O.push("- "+s.ad+" → "+x.path+":"+s.satir)));O.push("");
   O.push("## Dosya kartları");
-  N.forEach(x=>{const r=roleOf(x);O.push("### "+x.path,"- Rol: "+r.short+(r.risk?" · dokunma riski: "+r.risk:""),"- Ne yapar: "+x.sum,"- İçerdiği: "+((x.sembol||[]).map(s=>s.ad+":"+s.satir).join(", ")||"-"),"- Kullandığı: "+nmT(x.out,x.id),"- Kullanan: "+nm(x.inn),"- Boyut: "+x.lines+" satır","- Görev tarifi: "+tarifTekSatir(x),"")});
+  N.forEach(x=>{const r=roleOf(x),nt=x.not||notVer(x.path);O.push("### "+x.path,"- Rol: "+r.short+(r.risk?" · dokunma riski: "+r.risk:""),"- Ne yapar: "+x.sum,(nt?"- Not: "+nt:null),"- İçerdiği: "+((x.sembol||[]).map(s=>s.ad+":"+s.satir).join(", ")||"-"),"- Kullandığı: "+nmT(x.out,x.id),"- Kullanan: "+nm(x.inn),"- Boyut: "+x.lines+" satır","- Görev tarifi: "+tarifTekSatir(x),"")});
   return O.join(NL);
 }
 $("#gd").onclick=()=>{
@@ -940,7 +956,8 @@ function grafVerisi(){
     dosya:N.map(x=>({
       i:x.id, ad:x.name, yol:x.path, ext:x.ext, satir:x.lines||0,
       rol:heading?"":roleOf(x).short, risk:heading?"":roleOf(x).risk,
-      katman:(x.L|0)+1, sembol:(x.sembol||[]).slice(0,40), okunmadi:!!x.okunmadi, neden:x.nd||""
+      katman:(x.L|0)+1, sembol:(x.sembol||[]).slice(0,40), okunmadi:!!x.okunmadi, neden:x.nd||"",
+      not:(x.not||notVer(x.path)||"")
     })),
     kenar:(()=>{const r=[];N.forEach(a=>a.out.forEach(b=>r.push({a:a.id,b:b,tip:GUVEN.get(a.id+"-"+b)||"tahmin"})));return r})()
   };
@@ -948,6 +965,15 @@ function grafVerisi(){
 
 /* ===== KALICILIK: localStorage + JSON ===== */
 const ANAHTAR="semaSonHarita";
+/* ---- NOTLAR (model döngüsünün ilk yarısı) ----
+   Not DOSYA YOLUNA bağlı tutulur, harita ömrüne değil: klasör silinip yeniden taransa,
+   sayfa kapansa da not yerinde kalır. Dışa aktarımda `not` alanı olarak taşınır. */
+const NOT_ANAHTAR="semaNotlar";
+let NOTLAR={};
+try{NOTLAR=JSON.parse(localStorage.getItem(NOT_ANAHTAR)||"{}")||{}}catch(e){NOTLAR={}}
+function notKaydet(){try{localStorage.setItem(NOT_ANAHTAR,JSON.stringify(NOTLAR))}catch(e){uyar("↺ Notlar kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur")}}
+function notVer(yol){return NOTLAR[yol]||""}
+function notYaz(yol,metin){const t=String(metin==null?"":metin).trim();if(t)NOTLAR[yol]=t;else delete NOTLAR[yol];notKaydet()}
 function kaydet(E){
   const b=document.getElementById("geriBilgi");
   try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:SIR.test(d.path)?null:(d.text||null)}))}));
@@ -972,11 +998,14 @@ function grafYukle(j){
   const D=j.dosya||[], K=j.kenar||[];
   if(!D.length)return;
   heading=false;KATLI.clear();sel=-1;
+  /* JSON'da gelen notlar kalıcı depoya alınır: harita kapansa da not yoluyla yaşar. */
+  D.forEach(d=>{const y=d.yol||d.ad;if(d.not&&String(d.not).trim())NOTLAR[y]=String(d.not).trim()});notKaydet();
   G=D.map((d,i)=>({id:i,name:d.ad,path:d.yol||d.ad,ext:(d.ext||String(d.ad).split(".").pop()||""),
     group:(d.yol||"").includes("/")?(d.yol||"").split("/")[0]:"(kök)",text:null,size:0,
     lines:d.satir||0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
     sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):"Haritadan yüklendi ("+(j.kaynak||"kaynak")+"). Dosya metni yok; içerik için dosyayı aç.",
-    defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi}));
+    defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi,
+    not:(d.not&&String(d.not).trim())||notVer(d.yol||d.ad)||"",kod:"",yorumsuz:""}));
   GUVEN.clear();const tipler={};
   K.forEach(e=>{if(G[e.a]&&G[e.b]){G[e.a].out.add(e.b);G[e.b].inn.add(e.a);
     const t=e.tip||"tahmin";tipler[t]=(tipler[t]||0)+1;GUVEN.set(e.a+"-"+e.b,t)}});

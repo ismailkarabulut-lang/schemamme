@@ -170,5 +170,18 @@ test("T7 bağsız dosya en dip katmana gömülmez", () => {
     throw new Error("bağsız katmanı ayrı değil: " + JSON.stringify(m.katman));
 });
 
+/* T8 — not: yaz → dışa aktar → geri yükle → MD çıktısında görün */
+test("T8 not yazılır · JSON'a girer · geri yüklenir · MD'de görünür", () => {
+  harita([["a.py", "x = 1\n"], ["b.py", "y = 2\n"]]);
+  calistir("notYaz('a.py','kredi akışını bozar, dokunmayın')");
+  const disa = JSON.parse(calistir("JSON.stringify(grafVerisi())"));
+  esit(disa.dosya.find((d) => d.yol === "a.py").not, "kredi akışını bozar, dokunmayın", "dışa aktarımda not");
+  calistir("NOTLAR={}; notKaydet();");                       /* depo boş: not yalnız JSON'dan gelmeli */
+  calistir("grafYukle(" + JSON.stringify(disa) + ")");
+  esit(JSON.parse(calistir("JSON.stringify(G.find(x=>x.path==='a.py').not)")), "kredi akışını bozar, dokunmayın", "geri yüklemede not");
+  if (!calistir("buildGuide()").includes("- Not: kredi akışını bozar, dokunmayın"))
+    throw new Error("MD çıktısında not satırı yok");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
