@@ -197,5 +197,15 @@ test("T9 alias import sessizce yutulmaz, belirsiz sayılır", () => {
   esit(m.belirsiz, [{ path: "src/main.tsx", adet: 1 }], "yalnız projede adı olan alias sayılır; 'react' dış pakettir");
 });
 
+/* T10 — çok satırlı import: satır sonu bağı koparmaz (19.11: kokpitte kaçıyordu) */
+test("T10 çok satırlı import bağ kurar", () => {
+  const m = harita([
+    ["src/App.tsx", "import {\n  Activity,\n  Cpu,\n} from './utils/telemetry';\n"],
+    ["src/utils/telemetry.ts", "export const a = 1;\n"],
+  ]);
+  esit(m.kenar, ["src/App.tsx→src/utils/telemetry.ts:import"], "çok satırlı import bağı");
+  esit(m.bagimsiz, [], "telemetry bağımsız sayılmamalı");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
