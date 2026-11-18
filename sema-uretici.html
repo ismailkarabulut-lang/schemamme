@@ -20,13 +20,13 @@ body{background:var(--bg);color:var(--fg);font:14.5px/1.45 var(--f1);display:fle
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 620px at 50% -12%,rgba(124,110,245,.13),transparent 62%),radial-gradient(760px 520px at 88% 112%,rgba(45,212,191,.07),transparent 60%)}
 header{position:relative;padding:14px 12px 10px;border-bottom:1px solid var(--bd);background:linear-gradient(180deg,rgba(124,110,245,.055),transparent);z-index:1}
 header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:190px;height:1px;background:linear-gradient(90deg,transparent,var(--purple),transparent)}
-h1{margin:0 0 10px;font-family:var(--f2);font-size:12.5px;font-weight:800;letter-spacing:.34em;text-align:center;text-transform:uppercase;color:#fff;text-shadow:0 0 44px rgba(124,110,245,.6)}
+h1{margin:0 0 10px;font-family:var(--f2);font-size:12.5px;font-weight:800;letter-spacing:.34em;text-align:center;text-transform:uppercase;color:var(--fg);text-shadow:0 0 44px rgba(124,110,245,.6)}
 .bar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center}
 .bar .btn{padding:7px 12px;white-space:nowrap;font-size:10.5px}
 #q{width:110px;min-width:80px}
 #zm,#zp{padding:7px 9px}
 .btn{border:1px solid var(--bd);background:var(--pan);color:var(--fg);padding:6px 12px;border-radius:20px;cursor:pointer;font-family:var(--fm);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;transition:border-color .18s,color .18s,box-shadow .25s,transform .18s}
-.btn:hover{border-color:rgba(124,110,245,.6);color:#fff;box-shadow:0 0 0 1px rgba(124,110,245,.18),0 8px 22px -14px var(--purple)}
+.btn:hover{border-color:rgba(124,110,245,.6);color:var(--fg);box-shadow:0 0 0 1px rgba(124,110,245,.18),0 8px 22px -14px var(--purple)}
 .btn:active{transform:translateY(1px)}
 .btn:focus-visible,#q:focus-visible{outline:2px solid #7c6cff;outline-offset:1px}
 #q{border:1px solid var(--bd);background:var(--pan);color:var(--fg);padding:6px 8px;border-radius:8px;width:110px;min-width:80px;font:inherit}
@@ -66,15 +66,16 @@ animation:ndIn .52s cubic-bezier(.2,.8,.24,1) both;animation-delay:calc(var(--i,
 .dim{opacity:.18}
 path.e{fill:none;stroke:var(--edge);stroke-width:1.2;opacity:.6}
 path.e.est{opacity:.35;animation:eIn .9s ease both}
+path.e.kaynak{stroke:#E8B86D;opacity:.45;animation:eIn .9s ease both}
 path.e.on{stroke:var(--purple);stroke-width:2.4;opacity:1;filter:drop-shadow(0 0 7px var(--purple))}
 path.e.off{opacity:.08}
-#panel{display:none;position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;background:rgba(8,8,16,.94);backdrop-filter:blur(14px);border-top:1px solid rgba(124,110,245,.35);padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0009}
+#panel{display:none;position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;background:rgba(8,8,16,.94);color:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-top:1px solid rgba(124,110,245,.35);padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0009}
 #panel h2{margin:0 24px 2px 0;font-size:16px}
-#panel h3{margin:12px 0 4px;font-size:12px;color:var(--mut)}
-#panel .p{color:var(--mut);font-size:12px;word-break:break-all}
-#panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:var(--fg);font-size:22px;cursor:pointer}
-.tag{display:inline-block;border:1px solid var(--bd);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:var(--mut)}
-.chip{border:1px solid var(--bd);background:none;color:var(--fg);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
+#panel h3{margin:12px 0 4px;font-size:12px;color:rgba(255,255,255,.55)}
+#panel .p{color:rgba(255,255,255,.55);font-size:12px;word-break:break-all}
+#panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:rgba(255,255,255,.8);font-size:22px;cursor:pointer}
+.tag{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:rgba(255,255,255,.6)}
+.chip{border:1px solid rgba(255,255,255,.18);background:none;color:rgba(255,255,255,.85);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
 .legend{margin:10px auto 0;max-width:760px;color:var(--mut);font-size:11.5px;line-height:1.6;font-family:var(--fm);letter-spacing:.02em}.legend summary{cursor:pointer;letter-spacing:.14em;text-transform:uppercase}
 path.e.ah{fill:var(--edge);stroke:none;opacity:.9}path.e.ah.on{fill:#7c6cff;stroke:none;opacity:1}path.e.ah.off{opacity:.08}
 .role{margin:10px 0;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;line-height:1.6}
@@ -85,7 +86,7 @@ background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012))
 .k4i:nth-child(1){animation-delay:.02s}.k4i:nth-child(2){animation-delay:.08s}.k4i:nth-child(3){animation-delay:.14s}.k4i:nth-child(4){animation-delay:.2s}
 .k4i::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--purple);opacity:.75}
 .k4i b{font-family:var(--fm);font-size:8.5px;letter-spacing:.26em;color:var(--mut);font-weight:500}
-.k4i span{font-family:var(--f1);font-size:15px;font-weight:700;line-height:1.2;color:#fff;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.k4i span{font-family:var(--f1);font-size:15px;font-weight:700;line-height:1.2;color:var(--fg);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .k4i i{font-family:var(--fm);font-size:9px;color:var(--mut);font-style:normal;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .k4i[data-go]{transition:border-color .15s;cursor:pointer}.k4i[data-go]:hover{border-color:#7c6cff}
 #geriBilgi{max-width:1100px;margin:6px auto 0;padding:0 12px;font-size:11px;color:var(--mut)}
@@ -133,10 +134,17 @@ const AYAR_EXT=new Set(["kts","gradle","properties","pro","xml","toml","yml","ya
 function okunabilirUzanti(p){const nm=String(p).split("/").pop()||p;return TXT.test(nm)||!/\.[^./]+$/.test(nm)}
 function ikili(t){return /\u0000/.test(String(t).slice(0,4096))}
 const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|\.gradle|\.build-outputs|\.idea)(\/|$)/.test(p)||/(^|\/)(gradlew|gradlew\.bat|mvnw|mvnw\.cmd)$/i.test(p)||/\.(png|jpe?g|webp|gif|ico|apk|jar|keystore|base64|ttf|otf|mp3|mp4|wav|zip|7z)$/i.test(p)};
+/* SIR DOSYASI: anahtar/parola tutabilecek adlar. Dosya haritada GÖRÜNÜR ama metni
+   okunmaz, kayda yazılmaz, karta basılmaz — .env içeriği localStorage'a düşüyordu. */
+const SIR=/(^|\/)(\.env(\.[\w-]+)?|\.npmrc|\.netrc|\.pgpass|id_rsa|id_ed25519|secrets?[\w.-]*|credentials[\w.-]*)$|\.(pem|key|p12|pfx|jks|kdbx|ppk)$/i;
+/* BAĞ GÜVEN SINIFLARI — tek kaynak. kaynak/tahmin zayıf, kesin güçlü.
+   sema_ast.py: "kesin" = import/tanım · "kaynak" = metin sabitinde dosya adı. */
+const TIP_SIRA={kesin:0,kaynak:1,tahmin:2};
+const TIP_AD={kesin:"kesin · import/tanım",kaynak:"kaynak · metin sabitinde dosya adı",tahmin:"tahmin · dosya adı benzerliği"};
 /* Theia tasarım dili paleti (mimari_v4_canli.html'den ölçüldü) */
 const PAL=["#7C6EF5","#2DD4BF","#EF9F27","#4FA8D5","#C77DFF","#1D9E75","#E8B86D","#E85D24","#8A93A6"];
 /* RENK = ROL (anlam taşır) · KUTU HACMİ = SATIR SAYISI */
-const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9F27","bağımsız":"#E85D24"};
+const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9F27","bağımsız":"#E85D24","test":"#C77DFF","bölüm":"#4FA8D5"};
 function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -145,6 +153,7 @@ let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map();
 /* Bir dosyanın metni okunacak mı: üç engel var — okunmayan uzantı, boyut, ikili içerik.
    Üçü de "ölçülmedi" demektir; hiçbiri "kullanılmıyor" hükmü üretmez. */
 async function metinAl(p,boyut,oku){
+  if(SIR.test(p))return{t:null,okunmadi:true,neden:"sir"};
   if(!okunabilirUzanti(p))return{t:null,okunmadi:true,neden:"uzanti"};
   if(boyut>=BUYUK)return{t:null,okunmadi:true,neden:"boyut"};
   const t=await oku();
@@ -232,17 +241,38 @@ function defs(t){
 }
 function okunmadiMetni(e){
   if(!e.okunmadi)return summ(e.text,((e.path||"").split("/").pop().split(".").pop()||"").toLowerCase());
+  if(e.neden==="sir")return "Sır dosyası: metni okunmadı (anahtar/parola tutabilir). Haritada yalnız adı ve boyutu var — içerik karta, kayda ve dışa aktarıma girmez.";
   if(e.neden==="uzanti")return "İçerik okunmadı: bu dosyanın uzantısı metin olarak okunmuyor. Rol ve bağ çıkarılamadı — \"kullanılmıyor\" hükmü verilemez.";
   if(e.neden==="ikili")return "İçerik okunmadı: dosyada metin dışı baytlar var (ikili). Rol ve bağ çıkarılamadı.";
   return "Dosya 4 MB üzeri olduğu için metni okunmadı; yalnız adı ve boyutu biliniyor. Rol ve bağ çıkarılamaz.";
 }
+function kodTemizle(t,ext){
+  if(!t)return "";
+  let s=String(t);
+  const e=String(ext||"").toLowerCase();
+  if(/^(py|sh|rb|yml|yaml|toml|cfg|conf|ini)$/.test(e)){
+    s=s.replace(/(^|\s)#[^\n]*/g,"$1");
+  }else{
+    s=s.replace(/\/\*[\s\S]*?\*\//g," ");
+    s=s.replace(/\/\/[^\n]*/g," ");
+  }
+  s=s.replace(/"""[\s\S]*?"""/g,'""');
+  s=s.replace(/'''(?:[\s\S]*?)'''/g,"''");
+  s=s.replace(/`(?:\\[\s\S]|[^`\\])*`/g,'""');
+  s=s.replace(/"(?:\\.|[^"\\\n])*"/g,'""');
+  s=s.replace(/'(?:\\.|[^'\\\n])*'/g,"''");
+  return s;
+}
 function fileGraph(E){
   const N=E.map((e,i)=>{
     const nm=e.path.split("/").pop(),ext=(nm.includes(".")?nm.split(".").pop():"").toLowerCase();
-    return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:e.text,size:e.size,okunmadi:!!e.okunmadi,nd:e.neden||"",
-      lines:e.text?e.text.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(e),defs:defs(e.text),sembol:semboller(e.text)};
+    /* Sır kapısı burada da durur: hangi girişten gelirse gelsin (klasör, dosya, zip, JSON)
+       sır dosyasının metni düğüme girmez, kayda yazılmaz. */
+    const sir=SIR.test(e.path), tx=sir?null:e.text;
+    return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
+      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext)};
   });
-  const byName={},byStem={},DECL={},PAKET={};
+  const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={};
   /* Dış kütüphane kökleri: bunlardan gelen adlar proje dosyasıyla EŞLEŞTİRİLMEZ.
      (Örn. androidx.compose.ui.graphics.Color → Color.kt sanılıyordu.) */
   const DIS=/^(android|androidx|kotlin|kotlinx|java|javax|dalvik|sun|org|com\.google|com\.squareup|com\.android|okhttp3|retrofit2|io\.|org\.)/;
@@ -256,10 +286,32 @@ function fileGraph(E){
       if(pr)PAKET[pr[1]+"."+n.name.replace(/\.(kt|java)$/,"")]=n;
       /* Tanımlar: class/object/interface/fun + val/var (büyük harfle başlayan) */
       const rd=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:data|sealed|enum|abstract|private|internal|open|annotation|public|final|inline|suspend)\s+)*(?:class|object|interface|fun|val|var)\s+([A-Z]\w+)/gm;
-      while(m=rd.exec(n.text))if(!DECL[m[1]])DECL[m[1]]=n
+      /* Kotlin uzantısı: "fun TheiaViewModel.foo(" → TheiaViewModel TANIM DEĞİL, kullanımdır.
+         Bu ayrım yapılmadığı için sembol tablosu *Bolumu.kt dosyalarına kilitleniyordu. */
+      const kod=n.kod||n.text;
+      /* Uzantı fonksiyonu mu, kendi sınıfı var mı: "bölüm dosyası" ayrımı için.
+         Örn. SohbetDurumBolumu.kt → yalnız "fun TheiaViewModel.xxx()" tanımlar. */
+      n.uzanti=/^\s*(?:(?:internal|private|public|suspend|inline|open)\s+)*fun\s+[A-Z]\w*\./m.test(kod);
+      n.sinifiVar=/^\s*(?:(?:data|sealed|enum|abstract|private|internal|open|annotation|public|final)\s+)*(?:class|object|interface)\s+[A-Z]\w+/m.test(kod);
+      while(m=rd.exec(n.kod||n.text)){
+        if(kod.slice(rd.lastIndex,rd.lastIndex+1)===".")continue;
+        (DECL_ADAY[m[1]]=DECL_ADAY[m[1]]||[]).push(n);
+      }
     }
     const st=n.name.replace(/\.[^.]+$/,"");
     if(/^(py|js|mjs|ts|tsx|jsx|css|json|sh|kt)$/.test(n.ext)&&!byStem[st])byStem[st]=n;
+  });
+  /* Aynı ada çok talip varsa seçim OKUMA SIRASINDAN BAĞIMSIZ olmalı:
+     1) dosya adı sembolle aynı (TheiaViewModel → TheiaViewModel.kt), 2) alfabetik yol.
+     Önceden "ilk gelen kazanır"dı: aynı proje iki sırayla iki farklı harita veriyordu. */
+  Object.keys(DECL_ADAY).forEach(ad=>{
+    const adaylar=DECL_ADAY[ad].slice().sort((p,q)=>{
+      const pe=(p.name.replace(/\.[^.]+$/,"")===ad)?0:1, qe=(q.name.replace(/\.[^.]+$/,"")===ad)?0:1;
+      if(pe!==qe)return pe-qe;
+      return String(p.path).localeCompare(String(q.path));
+    });
+    DECL[ad]=adaylar[0];
+    if(adaylar.length>1)CAKISMA[ad]=adaylar.map(x=>x.path);
   });
   N.forEach(a=>{
     if(!a.text)return;
@@ -268,20 +320,22 @@ function fileGraph(E){
     const add=(b,tip)=>{
       if(!b||b===a)return;
       a.out.add(b.id);b.inn.add(a.id);
-      const k=a.id+"-"+b.id;
-      if(!GUVEN.has(k)||tip==="kesin")GUVEN.set(k,tip);
+      const k=a.id+"-"+b.id, eski=GUVEN.get(k);
+      if(!eski||(TIP_SIRA[tip]??9)<(TIP_SIRA[eski]??9))GUVEN.set(k,tip);
     };
+    /* Bağ kurma YALNIZ temiz kod üzerinden: yorum ve metin sabiti bağ üretmez. */
+    const kod=a.kod||"";
     if(a.ext==="kt"||a.ext==="java"){
-      (a.text.match(/\b[A-Z]\w{3,}\b/g)||[]).forEach(w=>add(DECL[w],"kesin"));
+      [...new Set(kod.match(/\b[A-Z]\w{3,}\b/g)||[])].forEach(w=>add(DECL[w],"kesin"));
       /* import: yalnız proje paketiyle TAM eşleşme; dış kütüphane yok sayılır */
       let m;const rk=/^\s*import\s+([\w.]+)/gm;
-      while(m=rk.exec(a.text)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"kesin")}
+      while(m=rk.exec(kod)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"kesin")}
     }
-    for(const nm in byName)if(nm.length>=4&&a.text.includes(nm))add(byName[nm],"tahmin");
+    for(const nm in byName)if(nm.length>=4&&kod.includes(nm))add(byName[nm],"tahmin");
     let m;const r1=/^\s*(?:from|import)\s+([\w.]+)/gm;
-    while(m=r1.exec(a.text)){if(/^(py|js|mjs|ts|tsx|jsx)$/.test(a.ext)){const p=m[1].split(".");add(byStem[p[p.length-1]],"kesin")}}
+    while(m=r1.exec(kod)){if(/^(py|js|mjs|ts|tsx|jsx)$/.test(a.ext)){const p=m[1].split(".");add(byStem[p[p.length-1]],"kesin")}}
     const r2=/(?:from\s+|require\(\s*|import\s+)["'](\.{0,2}\/?[^"']+)["']/g;
-    while(m=r2.exec(a.text))add(byStem[m[1].split("/").pop().replace(/\.[^.]+$/,"")],"kesin");
+    while(m=r2.exec(kod))add(byStem[m[1].split("/").pop().replace(/\.[^.]+$/,"")],"kesin");
   });
   return N;
 }
@@ -305,7 +359,11 @@ function headingGraph(e){
 }
 function draw(){
   const N=G,n=N.length,GX=18,GY=52;
-  const sS={};const dfs=a=>{sS[a.id]=1;let m=0;a.out.forEach(b=>{if(sS[b]===1)return;if(sS[b]!==2)dfs(N[b]);m=Math.max(m,N[b].H+1)});a.H=m;sS[a.id]=2};N.slice().sort((p,q)=>(p.inn.size-p.out.size)-(q.inn.size-q.out.size)).forEach(a=>{if(!sS[a.id])dfs(a)});const mx=Math.max(0,...N.map(a=>a.H));N.forEach(a=>a.L=mx-a.H);
+  const sS={};const dfs=a=>{sS[a.id]=1;let m=0;a.out.forEach(b=>{if(sS[b]===1)return;if(sS[b]!==2)dfs(N[b]);m=Math.max(m,N[b].H+1)});a.H=m;sS[a.id]=2};N.slice().sort((p,q)=>(p.inn.size-p.out.size)-(q.inn.size-q.out.size)).forEach(a=>{if(!sS[a.id])dfs(a)});const mx=Math.max(0,...N.map(a=>a.H));
+  const bagli=N.filter(a=>a.inn.size||a.out.size), mxB=bagli.length?Math.max(0,...bagli.map(a=>a.H)):0, BAGSIZ_KAT=mxB+1;
+  /* Bağı olmayan dosya (ne çağıran ne çağrılan) zincire girmez → ayrı "bağsız" şeridi.
+     Önceden en dip katmana gömülüyordu; build.gradle.kts ile Color.kt aynı şeritte görünüyordu. */
+  N.forEach(a=>a.L=(a.inn.size||a.out.size)?(mxB-a.H):BAGSIZ_KAT);
   for(let i=0;i<0;i++){let ch=false;
     N.forEach(a=>a.out.forEach(b=>{const t=Math.min(a.L+1,9);if(N[b].L<t){N[b].L=t;ch=true}}));
     if(!ch)break}
@@ -346,12 +404,12 @@ function draw(){
     if(ilk&&rl.size===1&&rl.has("başlatıcı"))return " · başlatıcılar";
     if(son&&rl.size===1&&rl.has("temel parça"))return " · temel parçalar";
     return "";};
-  if(!heading)labs.forEach(([k,yy],i)=>{h+='<text class="lbl" data-k="'+k+'" x="6" y="'+(yy-6)+'" fill="#8f8fa6" font-size="11">'+(KATLI.has(k)?'▸ ':'▾ ')+(k+1)+'. katman'+(i===0?katEtiket(k,true,false):(i===labs.length-1&&labs.length>1?katEtiket(k,false,true):''))+(KATLI.has(k)?' ('+lv[k].length+' dosya)':'')+'</text>'});
+  if(!heading)labs.forEach(([k,yy],i)=>{h+='<text class="lbl" data-k="'+k+'" x="6" y="'+(yy-6)+'" fill="#8f8fa6" font-size="11">'+(KATLI.has(k)?'▸ ':'▾ ')+(k===BAGSIZ_KAT?'bağsız':(k+1)+'. katman')+(i===0?katEtiket(k,true,false):(i===labs.length-1&&labs.length>1?katEtiket(k,false,true):''))+(KATLI.has(k)?' ('+lv[k].length+' dosya)':'')+'</text>'});
   N.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
     const B=N[b];if(KATLI.has(B.L))return;
     const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
     const tip=GUVEN.get(a.id+"-"+b)||"tahmin";
-    h+='<path class="e'+(tip==="tahmin"?" est":"")+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip==="tahmin"?' stroke-dasharray="4 4"':'')+'><title>'+(tip==="tahmin"?"tahmin · dosya adı benzerliği":"kesin · import/tanım")+'</title></path>';
+    h+='<path class="e'+(tip==="kesin"?"":(tip==="tahmin"?" est":" kaynak"))+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip!=="kesin"?' stroke-dasharray="4 4"':'')+'><title>'+(TIP_AD[tip]||tip)+'</title></path>';
     h+='<path class="e ah" data-a="'+a.id+'" data-b="'+b+'" d="M'+(x2-5)+' '+(y2-9)+' L'+x2+' '+y2+' L'+(x2+5)+' '+(y2-9)+' Z"/>';
   })});
   h+="</svg>";
@@ -360,7 +418,7 @@ function draw(){
     const c=renkOf(x),buyuk=!!x.okunmadi,orph=!heading&&!buyuk&&!x.inn.size&&!x.out.size;
     const canli=!heading&&!buyuk&&x.inn.size>=3,ri=!heading&&!buyuk&&roleOf(x).risk==="yüksek";
     h+='<div class="nd'+(buyuk?" okunmadi":"")+(orph?" orph":"")+(canli?" canli":"")+(ri?" ri":"")+'" data-i="'+x.id+'" tabindex="0" title="'+esc(x.path)+'" style="left:'+x.x+'px;top:'+x.y+'px;width:'+x.w+'px;height:'+x.h+'px;--nc:'+c+';--rk:'+(ri?1:0)+';--fs:'+(x.t||0).toFixed(2)+';--i:'+Math.min(x.id,40)+'">'
-      +"<b>"+esc(x.name)+"</b><small>"+(heading?esc(x.ext):roleOf(x).short)+(x.okunmadi?" · 4 MB+":(x.lines?" · "+x.lines+" satır":""))+"</small><i class=\"p2\"></i></div>";
+      +"<b>"+esc(x.name)+"</b><small>"+(heading?esc(x.ext):roleOf(x).short)+(x.okunmadi?(x.nd==="uzanti"||x.nd==="ikili"||x.nd==="sir"?"":" · 4 MB+"):(x.lines?" · "+x.lines+" satır":""))+"</small><i class=\"p2\"></i></div>";
   });
   cv.innerHTML=h;
   /* ===== MOTION: oklar çizilir, aralarında veri noktası akar ===== */
@@ -418,7 +476,7 @@ function chips(ids){
 function pick(i){
   sel=i;view();const x=G[i],P=$("#panel");
   const kb=x.size?(x.size/1024).toFixed(1)+" KB":"";
-  const okunmadiEtiket=(x.nd==="uzanti"?"içerik okunmadı: bu uzantı okunmuyor ("+(x.ext||"uzantısız")+") — rol/bağ verilmez":x.nd==="ikili"?"içerik okunmadı: ikili dosya — rol/bağ verilmez":"içerik okunmadı: 4 MB üzeri — rol/bağ hesaplanmadı");
+  const okunmadiEtiket=(x.nd==="sir"?"içerik okunmadı: sır dosyası (anahtar/parola tutabilir) — rol/bağ verilmez":x.nd==="uzanti"?"içerik okunmadı: bu uzantı okunmuyor ("+(x.ext||"uzantısız")+") — rol/bağ verilmez":x.nd==="ikili"?"içerik okunmadı: ikili dosya — rol/bağ verilmez":"içerik okunmadı: 4 MB üzeri — rol/bağ hesaplanmadı");
   const status=heading?"":(x.okunmadi?'<span class="tag" style="color:#8A93A6">'+okunmadiEtiket+'</span>':(roleOf(x).short==="yapılandırma"||roleOf(x).short==="belge")?'<span class="tag">'+roleOf(x).short+': kod bağı kurmaz · "kullanılmıyor" hükmü yok</span>':!x.inn.size&&!x.out.size?'<span class="tag" style="color:var(--hot)">bağımsız: hiçbir bağlantı yok</span>':!x.inn.size?'<span class="tag">giriş noktası: kimse çağırmıyor</span>':"");
   P.innerHTML='<button class="x" aria-label="Kapat">×</button><h2 style="color:'+col[x.group]+'">'+esc(x.name)+'</h2><div class="p">'+esc(x.path)+"</div>"
     +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
@@ -506,7 +564,7 @@ const KOD_EXT=new Set(["py","js","mjs","ts","tsx","jsx","kt","kts","java","go","
 /* ---- GİRİŞ NOKTASI: manifest + test dosyası ayrımı ----
    "Kimse çağırmıyor" tek başına giriş noktası demek değil: gelen bağların hepsi
    tahminse (dosya adı benzerliği) dosya yine giriş olabilir; test dosyaları geri plana düşer. */
-function hepsiTahmin(x){return x.inn.size>0&&[...x.inn].every(k=>GUVEN.get(k+"-"+x.id)==="tahmin")}
+function hepsiTahmin(x){return x.inn.size>0&&[...x.inn].every(k=>{const t=GUVEN.get(k+"-"+x.id);return t==="tahmin"||t==="kaynak"})}
 function testDosyasi(x){return /(^|\/)(test|androidTest|__tests__|spec)(\/|$)/i.test(x.path)||/(Test|Tests|Spec)\.[a-z]+$/i.test(x.name)}
 function manifestGirisleri(){
   const m=G.find(x=>/AndroidManifest\.xml$/i.test(x.path)&&x.text);
@@ -534,11 +592,17 @@ function girisRolu(x){return manifestGirisleri().has((x.name||"").replace(/\.[^.
 function roleOf(x){
   if(heading)return{short:x.ext,long:"",risk:""};
   if(x.okunmadi){
+    if((x.nd||"")==="sir")return{short:"okunmadı · sır",long:"Sır dosyası olduğu için metni okunmadı (anahtar/parola tutabilir). Rol ve bağ hesaplanmadı; \"kullanılmıyor\" hükmü verilmez.",risk:"ölçülmedi"};
     if((x.nd||"")==="uzanti")return{short:"okunmadı · uzantı",long:"Bu dosyanın uzantısı metin olarak okunmuyor ("+(x.ext||"uzantısız")+"), içeriği ölçülmedi. Bu yüzden \"bağımsız\" ya da \"kullanılmıyor\" hükmü VERİLMEZ. Rolü öğrenmek için dosyayı elle aç.",risk:"ölçülmedi"};
     if((x.nd||"")==="ikili")return{short:"okunmadı · ikili",long:"Dosyada metin dışı baytlar var (ikili içerik). Rol ve bağ hesaplanmadı; \"kullanılmıyor\" hükmü verilmez.",risk:"ölçülmedi"};
     return{short:"içerik okunmadı",long:"Dosya 4 MB üzeri olduğu için içeriği okunmadı; rol ve bağ hesaplanmadı. Bu kutu \"kullanılmıyor\" demek değildir — ölçülmemiştir. Dosyayı küçük parçalara bölerek ya da sema_ast.py ile harita üreterek analiz et.",risk:"ölçülmedi"};
   }
+  /* TEST DOSYASI ayrı rol: kimse çağırmıyor olması onu "giriş noktası" yapmaz. */
+  if(testDosyasi(x))return{short:"test",long:"Test dosyası. Üretim akışının parçası değil; kimse onu çağırmaması normaldir, giriş noktası değildir. Risk: düşük — bozulursa uygulama değil, güvence kaybolur.",risk:"düşük"};
   const i=x.inn.size,o=x.out.size;
+  /* BÖLÜM DOSYASI: kendi sınıfı yok, yalnız başka bir sınıfı genişleten fonksiyonlar tanımlıyor.
+     Kimse onu çağırmıyor olması onu "başlatıcı" yapmaz — çağrılan sınıftır, dosya değil. */
+  if(!i&&x.uzanti&&!x.sinifiVar)return{short:"bölüm",long:"Başka bir sınıfın parçası: bu dosya yalnız o sınıfı genişleten fonksiyonlar tanımlıyor. Dosyanın kendisi çağrılmaz — sınıf çağrılır. Bölünmüş ViewModel'in parçaları tipik örnektir.",risk:"orta"};
   if(AYAR_EXT.has((x.ext||"").toLowerCase()))return{short:"yapılandırma",long:"Derleme/bağımlılık/ayar tanımı. Kodu proje dosyalarına bağ kurmaz, o yüzden \"kullanılmıyor\" hükmü verilmez — rolü bağımlılık ve sürüm listesidir. Dokunursan derleme etkilenir.",risk:"orta"};
   if(!i&&!o&&!KOD_EXT.has((x.ext||"").toLowerCase()))return{short:"belge",long:"Kod dosyası değil (belge ya da ayar dosyası). Kod bağı kurmaz; rol ve risk hükmü verilmez — \"kullanılmıyor\" demek değildir, ölçülecek kod bağı yoktur.",risk:"—"};
   if(!i&&!o)return{short:"bağımsız",long:"Hiçbir dosyayla bağlantısı bulunamadı. Ya tek başına çalışan bir araç ya da artık kullanılmayan eski bir dosya olabilir.",risk:"düşük"};
@@ -552,7 +616,7 @@ function guide(x){
   const r=roleOf(x);
   let t='<div class="role"><b>Rolü: '+r.short+'</b><br>'+r.long+'<br>';
   if(x.out.size)t+='• Çalışmak için şunlara ihtiyacı var: '+esc(names(x.out))+'. Onlar bozulursa bu da bozulur.<br>';
-  if(x.out.size){const kes=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kesin").length;t+='• Bağ güveni: '+kes+' kesin, '+(x.out.size-kes)+' tahmin. Tahmin olanı koda bakmadan doğru sayma.<br>'}
+  if(x.out.size){const kes=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kesin").length;const kay=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kaynak").length;t+='• Bağ güveni: '+kes+' kesin, '+(x.out.size-kes-kay)+' tahmin'+(kay?', '+kay+' kaynak (metin sabitinde dosya adı)':'')+'. Kesin olmayanı koda bakmadan doğru sayma.<br>'}
   if(x.inn.size)t+='• Bunu şunlar kullanıyor: '+esc(names(x.inn))+'. Bunu değiştirirsen ya da silersen onlar etkilenir.<br>';
   if(hepsiTahmin(x))t+='• Gelen bağların hepsi <b>tahmin</b> (yalnız dosya adı benzerliği) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
   return t+'• Dokunma riski: <b>'+r.risk+'</b> (kaç dosyanın ona bağlı olduğuna göre)</div>';
@@ -597,8 +661,10 @@ function buildGuide(){
   O.push("## Özet","- "+N.length+" dosya, "+E+" bağlantı","- Giriş noktaları (manifestte bildirilen ya da kimse çağırmıyor): "+(ent.map(x=>x.path).join(", ")||"yok"),"- Dokunması riskli (çok dosya buna bağlı): "+(top.map(x=>x.name+" ("+x.inn.size+")").join(", ")||"yok"),"- Bağımsız (hiçbir bağlantı yok): "+(orp.map(x=>x.path).join(", ")||"yok"),"- Yapılandırma (kod bağı kurmaz, \"kullanılmıyor\" hükmü verilmez): "+(ayar.map(x=>x.path).join(", ")||"yok"),"- Okunmayan uzantı (rol/bağ hükmü VERİLMEDİ): "+(okuU.map(x=>x.path).join(", ")||"yok"),"- İkili içerik (rol/bağ hükmü VERİLMEDİ): "+(okuI.map(x=>x.path).join(", ")||"yok"),"- İçeriği okunmayan 4 MB üstü (rol/bağ hükmü VERİLMEDİ): "+(okuB.map(x=>x.path).join(", ")||"yok"),"");
   O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (tahmin): bu bağ yalnız dosya adı benzerliğinden çıkarıldı; koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
   O.push("## Katmanlar");
-  const by={};N.forEach(x=>(by[x.L]=by[x.L]||[]).push(x));
+  const by={};N.forEach(x=>{if(x.inn.size||x.out.size)(by[x.L]=by[x.L]||[]).push(x)});
   Object.keys(by).sort((a,b)=>a-b).forEach(k=>{O.push("### Katman "+(+k+1));by[k].forEach(x=>O.push("- "+x.path+" ["+roleOf(x).short+"]: "+x.sum.slice(0,140)));O.push("")});
+  const bgs=N.filter(x=>!x.inn.size&&!x.out.size);
+  if(bgs.length){O.push("### Bağsız · ne çağıran ne çağrılan");bgs.forEach(x=>O.push("- "+x.path+" ["+roleOf(x).short+"]: "+x.sum.slice(0,140)));O.push("")}
   O.push("## Sembol dizini (sınıf veya fonksiyon → dosya)");
   N.forEach(x=>(x.sembol||[]).forEach(s=>O.push("- "+s.ad+" → "+x.path+":"+s.satir)));O.push("");
   O.push("## Dosya kartları");
@@ -656,12 +722,12 @@ function kartGuncelle(){
   if(an){
     an.hidden=heading;
     if(!heading){
-      const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bağımsız","bağlantısız"]];
+      const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bölüm","sınıfın parçası"],["test","test dosyası"],["bağımsız","bağlantısız"]];
       an.innerHTML=R.map(([r,ac])=>'<span><i style="background:'+ROL_RENK[r]+'"></i>'+r+'<em>· '+ac+'</em></span>').join("")
         +'<span><i style="background:transparent;border:1px solid var(--mut)"></i>kutu hacmi = satır sayısı</span>'
         +'<span><i style="background:transparent;box-shadow:0 0 8px #fff6"></i>parlayan şerit = risk yüksek</span>'
         +'<span><i style="background:transparent;border:1px solid #8A93A6"></i>gri = belge/yapılandırma<em>· rol hükmü verilmez</em></span>'
-        +'<span><i style="background:transparent;border:1px dotted var(--mut)"></i>noktalı gri = içerik okunmadı<em>· uzantı / 4 MB+ / ikili</em></span>';
+        +'<span><i style="background:transparent;border:1px dotted var(--mut)"></i>noktalı gri = içerik okunmadı<em>· sır / uzantı / 4 MB+ / ikili</em></span>';
     }
   }
   k.querySelectorAll(".k4i[data-go]").forEach(el=>{
@@ -749,8 +815,11 @@ function gorevTarifi(x){
   if(heading)return"";
   const oku=[...x.out].map(i=>G[i].name), etk=[...x.inn].map(i=>G[i].name);
   const risk=roleOf(x).risk;
-  if(x.okunmadi)
+  if(x.okunmadi){
+    if(x.nd==="sir")
+      return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Sır dosyası: içeriği bilerek okunmadı (anahtar/parola tutabilir). Bağ ve rol hesaplanmadı — <b>bağlantısız sayma.</b> Modele: "bu dosyanın içeriğini okuma, sadece varlığını bil; değerleri sohbete ve koda yazma" de.</div>';
     return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Dosya 4 MB üzeri olduğu için içeriği okunmadı; bağ ve rol hesaplanmadı. <b>Bağlantısız sayma:</b> "kullanılmıyor" hükmü burada veri yokluğundan doğar. Modele: "önce dosyayı küçük parçalara böl ya da sema_ast.py ile harita üret, sonra karar ver" de.</div>';
+  }
   if(!oku.length&&!etk.length)
     return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Bağlantısı yok: ya tek başına çalışan bir araç ya da kullanılmayan dosya. Modele: “çağrıldığı yeri ara; bulunamazsa silme adayıdır” de.</div>';
   let h='<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3><ol>';
@@ -768,7 +837,8 @@ function gorevTarifi(x){
 function grafVerisi(){
   const N=G;
   return {
-    surum:2,
+    /* Bilinmeyen tip (kaynak vb.) varsa sürüm 3 yazılır: yükle→dışa aktar turunda sınıf kaybolmasın. */
+    surum:([...GUVEN.values()].some(t=>t!=="kesin"&&t!=="tahmin"))?3:2,
     uretildi:(()=>{const d=new Date(),p2=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes())})(),
     dosya:N.map(x=>({
       i:x.id, ad:x.name, yol:x.path, ext:x.ext, satir:x.lines||0,
@@ -783,7 +853,7 @@ function grafVerisi(){
 const ANAHTAR="semaSonHarita";
 function kaydet(E){
   const b=document.getElementById("geriBilgi");
-  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:d.text}))}));
+  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:SIR.test(d.path)?null:(d.text||null)}))}));
     if(b&&b.textContent.indexOf("Son harita kaydedilemedi")>=0){b.hidden=true;b.textContent=""}
   }catch(e){if(b){b.hidden=false;b.textContent="↺ Son harita kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur"}}}
 function indir(ad,metin,tip){
@@ -810,14 +880,14 @@ function grafYukle(j){
     lines:d.satir||0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
     sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):"Haritadan yüklendi ("+(j.kaynak||"kaynak")+"). Dosya metni yok; içerik için dosyayı aç.",
     defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi}));
-  GUVEN.clear();
+  GUVEN.clear();const tipler={};
   K.forEach(e=>{if(G[e.a]&&G[e.b]){G[e.a].out.add(e.b);G[e.b].inn.add(e.a);
-    GUVEN.set(e.a+"-"+e.b,e.tip==="tahmin"?"tahmin":"kesin")}});
+    const t=e.tip||"tahmin";tipler[t]=(tipler[t]||0)+1;GUVEN.set(e.a+"-"+e.b,t)}});
   try{localStorage.removeItem(ANAHTAR)}catch(err){}
   draw();kartGuncelle();
   ["gd","png","jdis","jicL","mv"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=false});
   const b=document.getElementById("geriBilgi");
-  if(b){b.hidden=false;b.textContent="🧩 Grafik yüklendi · "+(j.kaynak||"kaynak")+" · "+G.length+" dosya · "+K.length+" bağ · "+(j.uretildi||"")}
+  if(b){b.hidden=false;b.textContent="🧩 Grafik yüklendi · "+(j.kaynak||"kaynak")+" · "+G.length+" dosya · "+K.length+" bağ ("+Object.keys(tipler).map(t=>t+" "+tipler[t]).join(" · ")+")"+(j.uretildi?" · "+j.uretildi:"")+(j.surum&&j.surum>2?" · ⚠ şema sürüm "+j.surum+": bilinmeyen tip olduğu gibi korundu":"")}
 }
 function jsonYukle(file){
   const r=new FileReader();
@@ -841,6 +911,8 @@ const _pngBtn=document.getElementById("png");if(_pngBtn)_pngBtn.onclick=pngIndir
 const _jdis=document.getElementById("jdis");if(_jdis)_jdis.onclick=jsonIndir;
 const _jic=document.getElementById("jic");
 if(_jic)_jic.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)jsonYukle(f);e.target.value=""};
+/* Boş ekranda da erişilebilir: hazır bir haritayı yüklemek ilk adım olabilir (eskiden gizliydi). */
+const _jicL0=document.getElementById("jicL");if(_jicL0)_jicL0.hidden=false;
 kartGuncelle();
 
 /* son haritayı geri yükle */
