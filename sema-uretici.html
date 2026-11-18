@@ -410,9 +410,13 @@ function fileGraph(E){
     const re=/^[ \t]*from[ \t]+(\.*)([\w.]*)[ \t]+import[ \t]+(.+)$/gm;
     while(m=re.exec(kod)){
       const nokta=m[1].length, mod=m[2], adlar=m[3].replace(/[()]/g,"");
-      out.push({nokta,mod});
+      /* "from . import x" → paket kökü değil, doğrudan AD çözülür; boş mod girdisi
+         eklenirse çözülemez kalıp her import'u "belirsiz" yazıyordu. */
+      if(!(nokta>0&&!mod))out.push({nokta,mod});
       /* "from . import helpers, x" → her ad ayrı modül */
       if(nokta>0&&!mod)adlar.split(",").forEach(x=>{const s=x.trim().split(/\s+as\s+/)[0].trim();if(/^\w+$/.test(s))out.push({nokta,mod:s})});
+      /* "from .modules import bt1, bt3" → her ad ALT MODÜL olabilir (modules/bt1.py) */
+      if(nokta>0&&mod)adlar.split(",").forEach(x=>{const s=x.trim().split(/\s+as\s+/)[0].trim();if(/^\w+$/.test(s))out.push({nokta,mod:mod+"."+s,alt:true})});
     }
     const re2=/^[ \t]*import[ \t]+([\w.]+(?:[ \t]*,[ \t]*[\w.]+)*)/gm;
     while(m=re2.exec(kod))m[1].split(",").forEach(s=>{const ad=s.trim().split(".")[0];if(ad)out.push({nokta:0,mod:ad})});
@@ -424,6 +428,15 @@ function fileGraph(E){
       for(let k=0;k<it.nokta-1;k++)d.pop();
       const t=[...d,...(it.mod?it.mod.split("."):[])].join("/");
       for(const c of [t+".py",t+"/__init__.py"]){const n=byPath[c];if(n)return{node:n,tip:"import"}}
+      /* "from .modules import bt1" → modül yolu tutmadıysa SON ADI dosya olarak ara (modules/bt1.py) */
+      const son=(it.mod||"").split(".").pop();
+      const adaylar=(byStemList[son]||[]).filter(x=>x.ext==="py");
+      if(it.alt){
+        if(adaylar.length===1)return{node:adaylar[0],tip:"ad"};
+        if(adaylar.length>1)return{belirsiz:true};
+        return null;                 /* ad bir fonksiyon/sınıf olabilir: sessiz geç */
+      }
+      if(adaylar.length===1)return{node:adaylar[0],tip:"import"};
       return {belirsiz:true};
     }
     const son=(it.mod||"").split(".").pop();

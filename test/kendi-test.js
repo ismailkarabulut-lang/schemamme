@@ -227,5 +227,20 @@ test("T12 yorumdaki dosya adı kaynak bağı üretmez", () => {
   esit(m.kenar, [], "yorum satırı bağ kurmamalı");
 });
 
+/* T13 — "from .modules import bt1, bt3": paket içindeki ALT MODÜLLER bağ olur */
+test("T13 paket içi alt modül importları bağ kurar", () => {
+  const m = harita([
+    ["run.py", "from .modules import bt1, bt3\n"],
+    ["modules/__init__.py", "\n"],
+    ["modules/bt1.py", "from ..config import X\n"],
+    ["modules/bt3.py", "print(1)\n"],
+    ["config.py", "X=1\n"],
+  ]);
+  esit(m.kenar.includes("run.py\u2192modules/bt1.py:import"), true, "bt1 bağı kurulmalı");
+  esit(m.kenar.includes("run.py\u2192modules/bt3.py:import"), true, "bt3 bağı kurulmalı");
+  esit(m.kenar.includes("modules/bt1.py\u2192config.py:import"), true, "'..' iki nokta bir üst pakete çıkmalı");
+  esit(m.belirsiz, [], "belirsiz kalmamalı");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
