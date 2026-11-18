@@ -134,7 +134,7 @@ background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012))
 <button class="btn" id="jdis" hidden title="Grafı JSON olarak indir (sema-graph.json)">💾 JSON</button>
 <label class="btn" id="jicL" hidden title="JSON'dan harita yükle">📥 JSON<input id="jic" type="file" accept=".json,application/json" hidden></label>
 <input id="q" placeholder="ara…" aria-label="Ara">
-<label class="chk"><input type="checkbox" id="orph"> bağımsızlar</label>
+<label class="chk"><input type="checkbox" id="orph"> bağsızlar</label>
 <button class="btn" id="zm" aria-label="Küçült">−</button><button class="btn" id="zp" aria-label="Büyüt">+</button>
 </div>
 </header>
@@ -172,14 +172,15 @@ const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|\.gradle
 /* SIR DOSYASI: anahtar/parola tutabilecek adlar. Dosya haritada GÖRÜNÜR ama metni
    okunmaz, kayda yazılmaz, karta basılmaz — .env içeriği localStorage'a düşüyordu. */
 const SIR=/(^|\/)(\.env(\.[\w-]+)?|\.npmrc|\.netrc|\.pgpass|id_rsa|id_ed25519|secrets?[\w.-]*|credentials[\w.-]*)$|\.(pem|key|p12|pfx|jks|kdbx|ppk)$/i;
-/* BAĞ GÜVEN SINIFLARI — tek kaynak. kaynak/tahmin zayıf, kesin güçlü.
-   sema_ast.py: "kesin" = import/tanım · "kaynak" = metin sabitinde dosya adı. */
-const TIP_SIRA={kesin:0,kaynak:1,tahmin:2};
-const TIP_AD={kesin:"kesin · import/tanım",kaynak:"kaynak · metin sabitinde dosya adı",tahmin:"tahmin · dosya adı benzerliği"};
+/* BAĞ SINIFLARI — hiçbiri "kesin" demez:
+     import = import satırı + yol eşleşmesi (ölçüm) · ad = ad kodda geçiyor, tanım tek dosyada
+     kaynak = metin sabitinde dosya adı (en zayıf). Ölçülemeyen bağ KURULMAZ → dosya "belirsiz". */
+const TIP_SIRA={import:0,kaynak:1,ad:2};
+const TIP_AD={import:"import · yol eşleşmesi (ölçüm)",kaynak:"kaynak · metin sabitinde dosya adı",ad:"ad · kodda geçiyor (tanım eşleşmesi)"};
 /* Theia tasarım dili paleti (mimari_v4_canli.html'den ölçüldü) */
 const PAL=["#7C6EF5","#2DD4BF","#EF9F27","#4FA8D5","#C77DFF","#1D9E75","#E8B86D","#E85D24","#8A93A6"];
 /* RENK = ROL (anlam taşır) · KUTU HACMİ = SATIR SAYISI */
-const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9F27","bağımsız":"#E85D24","test":"#C77DFF","bölüm":"#4FA8D5"};
+const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9F27","bağsız":"#E85D24","test":"#C77DFF","bölüm":"#4FA8D5"};
 function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -316,7 +317,7 @@ function fileGraph(E){
        sır dosyasının metni düğüme girmez, kayda yazılmaz. */
     const sir=SIR.test(e.path), tx=sir?null:e.text;
     return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
-      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext),not:notVer(e.path)||(e.not||"")};
+      lines:tx?tx.split("\n").length:0,belirsiz:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext),not:notVer(e.path)||(e.not||"")};
   });
   const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={},byPath={},byStemList={};
   const yolNorm=p=>String(p||"").replace(/\\/g,"/").replace(/\/{2,}/g,"/").replace(/^\.\//,"");
@@ -384,14 +385,20 @@ function fileGraph(E){
     return [...new Set(out)];
   };
   const jsCoz=(spec,kaynak)=>{
-    if(!spec||!/^\.{1,2}\//.test(spec))return null;      /* paket adı → dış kütüphane */
+    /* Göreli olmayan import: paket sayılır ve YOK SAYILIR — ama adı projede bir dosyaya
+       benziyorsa sessizce yutmak yalan olur (alias '@/', '~/', monorepo). "belirsiz" sayılır. */
+    if(!spec||!/^\.{1,2}\//.test(spec)){
+      const kuyruk=String(spec||"").split("/").pop().replace(/\.[^.]+$/,"");
+      if(kuyruk&&byStemList[kuyruk])return {belirsiz:true};
+      return null;
+    }
     const d=yolNorm(kaynak).split("/");d.pop();
     spec.split("/").forEach(p=>{if(p===".")return;if(p==="..")d.pop();else d.push(p)});
     const t=d.join("/");
     const aday=[t,t+".js",t+".mjs",t+".cjs",t+".jsx",t+".ts",t+".tsx",t+".vue",t+".svelte",t+".json",
                 t+"/index.js",t+"/index.ts",t+"/index.tsx",t+"/index.jsx"];
-    for(const c of aday){const n=byPath[c];if(n)return{node:n,kesin:true}}
-    return null;
+    for(const c of aday){const n=byPath[c];if(n)return{node:n,tip:"import"}}
+    return {belirsiz:true};   /* göreli yol yazılmış ama haritada yok → bağ kurulmaz, belirsiz sayılır */
   };
   const pyIthal=(kod)=>{
     const out=[];let m;
@@ -411,47 +418,53 @@ function fileGraph(E){
     if(it.nokta>0){
       for(let k=0;k<it.nokta-1;k++)d.pop();
       const t=[...d,...(it.mod?it.mod.split("."):[])].join("/");
-      for(const c of [t+".py",t+"/__init__.py"]){const n=byPath[c];if(n)return{node:n,kesin:true}}
-      return null;
+      for(const c of [t+".py",t+"/__init__.py"]){const n=byPath[c];if(n)return{node:n,tip:"import"}}
+      return {belirsiz:true};
     }
     const son=(it.mod||"").split(".").pop();
     const adaylar=(byStemList[son]||[]).filter(x=>x.ext==="py");
     if(!adaylar.length)return null;
-    const n=sec(adaylar,kaynak);
-    /* aynı adlı birden çok dosya varsa "kesin" demeyiz: en yakın seçildi, tahmin işaretlenir */
-    return {node:n,kesin:adaylar.length===1};
+    /* aynı adlı birden çok dosya varsa BAĞ KURULMAZ: iki aday var, seçim sıraya/konuma
+       bağlı kalır. Tek aday varsa "ad" tipiyle kurulur (ad eşleşmesi, yol değil). */
+    if(adaylar.length>1)return {belirsiz:true};
+    return {node:adaylar[0],tip:"ad"};
   };
   N.forEach(a=>{
     if(!a.text)return;
     if(AYAR_EXT.has((a.ext||"").toLowerCase())||/^(md|txt)$/i.test(a.ext))return;   /* belge ve ayar dosyası kod bağı kurmaz */
-    /* add(dosya, güven): kesin = import/tanım yolu · tahmin = yalnız dosya adı benzerliği */
+    /* add(dosya, sınıf): import = yol eşleşmesi · ad = kodda geçiyor · kaynak = metin sabiti */
     const add=(b,tip)=>{
       if(!b||b===a)return;
       a.out.add(b.id);b.inn.add(a.id);
       const k=a.id+"-"+b.id, eski=GUVEN.get(k);
       if(!eski||(TIP_SIRA[tip]??9)<(TIP_SIRA[eski]??9))GUVEN.set(k,tip);
     };
+    /* Çözülemeyen import BAĞ KURMAZ, "belirsiz" sayılır: göreli yol haritada yoksa ya da
+       aynı ada iki aday varsa en yakınını seçmek okuma sırasına bağlı yanlış bağ üretiyordu. */
+    const bagEkle=(h)=>{
+      if(!h)return;
+      if(h.belirsiz){a.belirsiz=(a.belirsiz||0)+1;return}
+      add(h.node,h.tip);
+    };
     /* İki kaynak: import satırları YORUMSUZ metinden (yol bir metin sabitidir),
        kelime eşleşmesi TEMİZ koddan (yorumda geçen ad bağ üretmesin). */
     const kod=a.kod||"", yor=a.yorumsuz||"";
     if(a.ext==="kt"||a.ext==="java"){
-      [...new Set(kod.match(/\b[A-Z]\w{3,}\b/g)||[])].forEach(w=>add(DECL[w],"kesin"));
+      [...new Set(kod.match(/\b[A-Z]\w{3,}\b/g)||[])].forEach(w=>add(DECL[w],"ad"));
       /* import: yalnız proje paketiyle TAM eşleşme; dış kütüphane yok sayılır */
       let m;const rk=/^\s*import\s+([\w.]+)/gm;
-      while(m=rk.exec(kod)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"kesin")}
+      while(m=rk.exec(kod)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"import")}
     }
     /* JS/TS: import ... from '…' · export … from '…' · import '…' · require('…') · import('…') */
     if(/^(js|mjs|cjs|jsx|ts|tsx|vue|svelte)$/.test(a.ext)){
-      jsIthal(yor).forEach(sp=>{const h=jsCoz(sp,a.path);if(h)add(h.node,h.kesin?"kesin":"tahmin")});
+      jsIthal(yor).forEach(sp=>{bagEkle(jsCoz(sp,a.path))});
     }
     /* PYTHON: import x · from x import y · from . import y · from ..pkg import z */
     if(a.ext==="py"){
-      pyIthal(kod).forEach(it=>{const h=pyCoz(it,a.path);if(h)add(h.node,h.kesin?"kesin":"tahmin")});
+      pyIthal(kod).forEach(it=>{bagEkle(pyCoz(it,a.path))});
     }
-    /* Dosya adı benzerliği: JETON tabanlı. Eskiden her dosya için tüm adlar `includes` ile
-       taranıyordu (O(N²)) — 2.000 dosyada 0,9 sn sırf buradaydı. */
-    const jt=kod.match(/[A-Za-z0-9_$.-]+/g);
-    if(jt)new Set(jt).forEach(w=>{if(w.length>=4){const b=byName[w];if(b&&b!==a)add(b,"tahmin")}});
+    /* Dosya adı benzerliğinden bağ üretme KALDIRILDI (Kaptan 19.11): "GorevBolumu.kt"
+       projede hiç geçmediği hâlde merkeze oturuyordu. Ölçüm olmayan bağ, eksik bağdan kötüdür. */
   });
   return N;
 }
@@ -531,8 +544,8 @@ function draw(){
   N.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
     const B=byId[b];if(!B||KATLI.has(B.L))return;
     const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
-    const tip=GUVEN.get(a.id+"-"+b)||"tahmin";
-    h+='<path class="e'+(tip==="kesin"?"":(tip==="tahmin"?" est":" kaynak"))+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip!=="kesin"?' stroke-dasharray="4 4"':'')+'><title>'+(TIP_AD[tip]||tip)+'</title></path>';
+    const tip=GUVEN.get(a.id+"-"+b)||"ad";
+    h+='<path class="e'+(tip==="import"?"":(tip==="ad"?" est":" kaynak"))+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip!=="import"?' stroke-dasharray="4 4"':'')+'><title>'+(TIP_AD[tip]||tip)+'</title></path>';
     if(!sade)h+='<path class="e ah" data-a="'+a.id+'" data-b="'+b+'" d="M'+(x2-5)+' '+(y2-9)+' L'+x2+' '+y2+' L'+(x2+5)+' '+(y2-9)+' Z"/>';
   })});
   h+="</svg>";
@@ -561,7 +574,7 @@ function draw(){
     yollar.filter((p,i)=>i%4===0).forEach((p,i)=>{
       const c2=document.createElementNS("http://www.w3.org/2000/svg","circle");
       c2.setAttribute("r","2.1");
-      c2.setAttribute("fill",p.getAttribute("data-tip")==="tahmin"?"#8A93A6":"#2DD4BF");
+      c2.setAttribute("fill",p.getAttribute("data-tip")==="ad"?"#8A93A6":"#2DD4BF");
       c2.setAttribute("opacity",".9");
       const am=document.createElementNS("http://www.w3.org/2000/svg","animateMotion");
       am.setAttribute("dur",(3+i*0.45).toFixed(1)+"s");
@@ -598,11 +611,21 @@ function view(){
 function chips(ids){
   return ids.size?[...ids].map(i=>'<button class="chip" data-go="'+i+'" style="border-color:'+col[G[i].group]+'">'+esc(G[i].name)+"</button>").join(""):'<span class="p">yok</span>';
 }
+/* BAĞ DURUMU — üç hâl (Kaptan 19.11 "önce doğru çalışsın"). Ekranda "0" görmek
+   "kullanılmıyor" demek DEĞİLDİR; hangi hâlde olduğu yazılır. */
+function bagDurum(x){
+  if(x.okunmadi)return "hesaplanmadı";
+  const e=(x.ext||"").toLowerCase();
+  if(AYAR_EXT.has(e)||/^(md|txt|html|css)$/i.test(e))return "kapsam dışı";
+  if(x.belirsiz)return "belirsiz "+x.belirsiz;
+  if(!x.inn.size&&!x.out.size)return "bağ yok";
+  return "";
+}
 function pick(i){
   sel=i;view();const x=G[i],P=$("#kart");
   const kb=x.size?(x.size/1024).toFixed(1)+" KB":"";
   const okunmadiEtiket=(x.nd==="sir"?"içerik okunmadı: sır dosyası (anahtar/parola tutabilir) — rol/bağ verilmez":x.nd==="uzanti"?"içerik okunmadı: bu uzantı okunmuyor ("+(x.ext||"uzantısız")+") — rol/bağ verilmez":x.nd==="ikili"?"içerik okunmadı: ikili dosya — rol/bağ verilmez":"içerik okunmadı: 4 MB üzeri — rol/bağ hesaplanmadı");
-  const status=heading?"":(x.okunmadi?'<span class="tag" style="color:#8A93A6">'+okunmadiEtiket+'</span>':(roleOf(x).short==="yapılandırma"||roleOf(x).short==="belge")?'<span class="tag">'+roleOf(x).short+': kod bağı kurmaz · "kullanılmıyor" hükmü yok</span>':!x.inn.size&&!x.out.size?'<span class="tag" style="color:var(--hot)">bağımsız: hiçbir bağlantı yok</span>':!x.inn.size?'<span class="tag">giriş noktası: kimse çağırmıyor</span>':"");
+  const status=heading?"":(x.okunmadi?'<span class="tag" style="color:#8A93A6">'+okunmadiEtiket+'</span>':(roleOf(x).short==="yapılandırma"||roleOf(x).short==="belge")?'<span class="tag">'+roleOf(x).short+': kod bağı kurmaz · "kullanılmıyor" hükmü yok</span>':(!x.inn.size&&!x.out.size)?'<span class="tag" style="color:var(--hot)">'+(bagDurum(x)==="bağ yok"?"bu haritada bağ yok — \"kullanılmıyor\" hükmü değil":"kapsam dışı: "+bagDurum(x))+'</span>':!x.inn.size?'<span class="tag">giriş noktası: kimse çağırmıyor</span>':"");
   P.innerHTML='<button class="x" aria-label="Kapat">×</button><h2 style="color:'+col[x.group]+'">'+esc(x.name)+'</h2><div class="p">'+esc(x.path)+"</div>"
     +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
     +'<span class="tag">'+esc(x.ext||"dosya")+"</span>"+(x.lines?'<span class="tag">'+x.lines+" satır</span>":"")+(kb?'<span class="tag">'+kb+"</span>":"")+'<span class="tag">'+esc(x.group)+"</span>"+status+(girisRolu(x)?'<span class="tag">manifestte bildirilen giriş noktası</span>':"")
@@ -702,8 +725,8 @@ addEventListener("drop",e=>{
 const KOD_EXT=new Set(["py","js","mjs","ts","tsx","jsx","kt","kts","java","go","rs","rb","php","cs","c","h","cpp","hpp","cc","sh","sql","toml"]);
 /* ---- GİRİŞ NOKTASI: manifest + test dosyası ayrımı ----
    "Kimse çağırmıyor" tek başına giriş noktası demek değil: gelen bağların hepsi
-   tahminse (dosya adı benzerliği) dosya yine giriş olabilir; test dosyaları geri plana düşer. */
-function hepsiTahmin(x){return x.inn.size>0&&[...x.inn].every(k=>{const t=GUVEN.get(k+"-"+x.id);return t==="tahmin"||t==="kaynak"})}
+   zayıfsa (ad eşleşmesi) dosya yine giriş olabilir; test dosyaları geri plana düşer. */
+function hepsiZayif(x){return x.inn.size>0&&[...x.inn].every(k=>{const t=GUVEN.get(k+"-"+x.id);return t==="ad"||t==="kaynak"})}
 function testDosyasi(x){return /(^|\/)(test|androidTest|__tests__|spec)(\/|$)/i.test(x.path)||/(Test|Tests|Spec)\.[a-z]+$/i.test(x.name)}
 function manifestGirisleri(){
   const m=G.find(x=>/AndroidManifest\.xml$/i.test(x.path)&&x.text);
@@ -722,10 +745,10 @@ function girisNoktalari(){
     if(r==="yapılandırma"||r==="belge"||x.okunmadi)p-=100;
     if(testDosyasi(x))p-=50;
     p+=Math.min(10,x.out.size);
-    if(hepsiTahmin(x))p+=5;
+    if(hepsiZayif(x))p+=5;
     return p;
   };
-  return G.filter(x=>!x.okunmadi&&(manMi(x)||(x.out.size&&(!x.inn.size||hepsiTahmin(x))))).slice().sort((a,b)=>puan(b)-puan(a));
+  return G.filter(x=>!x.okunmadi&&(manMi(x)||(x.out.size&&(!x.inn.size||hepsiZayif(x))))).slice().sort((a,b)=>puan(b)-puan(a));
 }
 function girisRolu(x){return manifestGirisleri().has((x.name||"").replace(/\.[^.]+$/,"").toLowerCase())}
 function roleOf(x){
@@ -744,7 +767,7 @@ function roleOf(x){
   if(!i&&x.uzanti&&!x.sinifiVar)return{short:"bölüm",long:"Başka bir sınıfın parçası: bu dosya yalnız o sınıfı genişleten fonksiyonlar tanımlıyor. Dosyanın kendisi çağrılmaz — sınıf çağrılır. Bölünmüş ViewModel'in parçaları tipik örnektir.",risk:"orta"};
   if(AYAR_EXT.has((x.ext||"").toLowerCase()))return{short:"yapılandırma",long:"Derleme/bağımlılık/ayar tanımı. Kodu proje dosyalarına bağ kurmaz, o yüzden \"kullanılmıyor\" hükmü verilmez — rolü bağımlılık ve sürüm listesidir. Dokunursan derleme etkilenir.",risk:"orta"};
   if(!i&&!o&&!KOD_EXT.has((x.ext||"").toLowerCase()))return{short:"belge",long:"Kod dosyası değil (belge ya da ayar dosyası). Kod bağı kurmaz; rol ve risk hükmü verilmez — \"kullanılmıyor\" demek değildir, ölçülecek kod bağı yoktur.",risk:"—"};
-  if(!i&&!o)return{short:"bağımsız",long:"Hiçbir dosyayla bağlantısı bulunamadı. Ya tek başına çalışan bir araç ya da artık kullanılmayan eski bir dosya olabilir.",risk:"düşük"};
+  if(!i&&!o)return{short:"bağsız",long:"Bu haritada hiçbir bağ bulunamadı — \"kullanılmıyor\" hükmü DEĞİL: dinamik çağrı, yansıma ya da tanımadığım bir import biçimi olabilir; silmeden önce koda bak. Eski bir dosya olabilir.",risk:"düşük"};
   if(!i)return{short:"başlatıcı",long:"Kimse bunu çağırmıyor, o başkalarını çağırıyor. Genelde programı başlatan ya da bir işi baştan sona yöneten dosya budur.",risk:"orta"};
   if(!o)return{short:"temel parça",long:"Başka dosyalara ihtiyaç duymuyor ama diğerleri onu kullanıyor. Veri, ayar ya da ortak yardımcı işler burada olur.",risk:i>=3?"yüksek":"orta"};
   return{short:"aracı",long:"Hem üstteki bir dosya onu çağırıyor hem de o alttaki dosyaları çağırıyor. Zincirin ortasında bir halka.",risk:i>=3?"yüksek":"orta"};
@@ -755,9 +778,9 @@ function guide(x){
   const r=roleOf(x);
   let t='<div class="role"><b>Rolü: '+r.short+'</b><br>'+r.long+'<br>';
   if(x.out.size)t+='• Çalışmak için şunlara ihtiyacı var: '+esc(names(x.out))+'. Onlar bozulursa bu da bozulur.<br>';
-  if(x.out.size){const kes=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kesin").length;const kay=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kaynak").length;t+='• Bağ güveni: '+kes+' kesin, '+(x.out.size-kes-kay)+' tahmin'+(kay?', '+kay+' kaynak (metin sabitinde dosya adı)':'')+'. Kesin olmayanı koda bakmadan doğru sayma.<br>'}
+  if(x.out.size){const imp=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="import").length;const kay=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kaynak").length;t+='• Bağ güveni: '+imp+' import, '+(x.out.size-imp-kay)+' ad'+(kay?', '+kay+' kaynak (metin sabitinde dosya adı)':'')+'. Kesin olmayanı koda bakmadan doğru sayma.<br>'}
   if(x.inn.size)t+='• Bunu şunlar kullanıyor: '+esc(names(x.inn))+'. Bunu değiştirirsen ya da silersen onlar etkilenir.<br>';
-  if(hepsiTahmin(x))t+='• Gelen bağların hepsi <b>tahmin</b> (yalnız dosya adı benzerliği) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
+  if(hepsiZayif(x))t+='• Gelen bağların hepsi <b>ad eşleşmesi</b> (import satırı değil) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
   return t+'• Dokunma riski: <b>'+r.risk+'</b> (kaç dosyanın ona bağlı olduğuna göre)</div>';
 }
 function modelMetni(){
@@ -785,16 +808,16 @@ document.addEventListener("click",e=>{
 function buildGuide(){
   const NL=String.fromCharCode(10),O=[],N=G.slice();
   const nm=s=>[...s].map(i=>G[i].name).join(", ")||"yok";
-  const nmT=(s,from)=>[...s].map(i=>G[i].name+(GUVEN.get(from+"-"+i)==="tahmin"?" (tahmin)":"")).join(", ")||"yok";
+  const nmT=(s,from)=>[...s].map(i=>G[i].name+(GUVEN.get(from+"-"+i)==="ad"?" (ad)":"")).join(", ")||"yok";
   const E=N.reduce((s,x)=>s+x.out.size,0);
   const top=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size>=2).slice(0,6);
-  const ent=girisNoktalari().slice(0,5),orp=N.filter(x=>roleOf(x).short==="bağımsız"),
+  const ent=girisNoktalari().slice(0,5),orp=N.filter(x=>roleOf(x).short==="bağsız"),
         ayar=N.filter(x=>roleOf(x).short==="yapılandırma"),
         okuU=N.filter(x=>x.okunmadi&&x.nd==="uzanti"),okuI=N.filter(x=>x.okunmadi&&x.nd==="ikili"),
         okuB=N.filter(x=>x.okunmadi&&x.nd!=="uzanti"&&x.nd!=="ikili");
   O.push("# Şema Haritası","","> Şema Üretici ile otomatik üretildi (harita.py'nin PROJE-HARITASI.md'sinden ayrı dosya). **Yapay zeka modelleri için:** bir şey aramadan önce bu dosyayı oku. “Sembol dizini” ve “Dosya kartları” bölümlerinden doğru dosyayı bul, sonra yalnızca o dosyayı aç. Bağlantılar otomatik tahmindir, kesin değildir.","");
   O.push("## Özet","- "+N.length+" dosya, "+E+" bağlantı","- Giriş noktaları (manifestte bildirilen ya da kimse çağırmıyor): "+(ent.map(x=>x.path).join(", ")||"yok"),"- Dokunması riskli (çok dosya buna bağlı): "+(top.map(x=>x.name+" ("+x.inn.size+")").join(", ")||"yok"),"- Bağımsız (hiçbir bağlantı yok): "+(orp.map(x=>x.path).join(", ")||"yok"),"- Yapılandırma (kod bağı kurmaz, \"kullanılmıyor\" hükmü verilmez): "+(ayar.map(x=>x.path).join(", ")||"yok"),"- Okunmayan uzantı (rol/bağ hükmü VERİLMEDİ): "+(okuU.map(x=>x.path).join(", ")||"yok"),"- İkili içerik (rol/bağ hükmü VERİLMEDİ): "+(okuI.map(x=>x.path).join(", ")||"yok"),"- İçeriği okunmayan 4 MB üstü (rol/bağ hükmü VERİLMEDİ): "+(okuB.map(x=>x.path).join(", ")||"yok"),"");
-  O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (tahmin): bu bağ yalnız dosya adı benzerliğinden çıkarıldı; koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
+  O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (ad): bu bağ yalnız dosya adı benzerliğinden çıkarıldı; koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
   O.push("## Katmanlar");
   const by={};N.forEach(x=>{if(x.inn.size||x.out.size)(by[x.L]=by[x.L]||[]).push(x)});
   Object.keys(by).sort((a,b)=>a-b).forEach(k=>{O.push("### Katman "+(+k+1));by[k].forEach(x=>O.push("- "+x.path+" ["+roleOf(x).short+"]: "+x.sum.slice(0,140)));O.push("")});
@@ -858,7 +881,7 @@ function kartGuncelle(){
     /* Renk anahtarı varsayılan KAPALI: üstte/panelde sürekli yazı durmaz, şeritteki ? ile açılır. */
     an.hidden=true;
     if(!heading){
-      const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bölüm","sınıfın parçası"],["test","test dosyası"],["bağımsız","bağlantısız"]];
+      const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bölüm","sınıfın parçası"],["test","test dosyası"],["bağsız","bağ bulunamadı"]];
       an.innerHTML=R.map(([r,ac])=>'<span><i style="background:'+ROL_RENK[r]+'"></i>'+r+'<em>· '+ac+'</em></span>').join("")
         +'<span><i style="background:transparent;border:1px solid var(--mut)"></i>kutu hacmi = satır sayısı</span>'
         +'<span><i style="background:transparent;box-shadow:0 0 8px #fff6"></i>parlayan şerit = risk yüksek</span>'
@@ -896,7 +919,7 @@ function pngOlustur(){
   G.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
     const B=G[b];if(!B||KATLI.has(B.L))return;
     const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
-    const tah=GUVEN.get(a.id+"-"+b)==="tahmin";
+    const tah=GUVEN.get(a.id+"-"+b)==="ad";
     g.save();g.strokeStyle=edg;g.lineWidth=1.2;g.globalAlpha=tah?0.35:0.6;g.setLineDash(tah?[4,4]:[]);
     g.beginPath();g.moveTo(x1,y1);g.bezierCurveTo(x1,y1+d,x2,y2-d,x2,y2);g.stroke();g.restore();
     g.save();g.fillStyle=edg;g.globalAlpha=tah?0.5:0.85;
@@ -919,7 +942,7 @@ function pngOlustur(){
   });
   /* alt damga */
   g.fillStyle=mut;g.font='10px "DejaVu Sans",sans-serif';
-  g.fillText("Şema Üretici · kesikli ok = tahmin",8,c.height/S-8);
+  g.fillText("Şema Üretici · kesikli ok = ad eşleşmesi",8,c.height/S-8);
   return c;
 }
 function pngVeri(){const c=pngOlustur();return c.toDataURL("image/png")}
@@ -942,7 +965,7 @@ function tarifMetni(x){
   if(oku.length)L.push("ÖNCE OKU: "+oku.slice(0,8).join(", "));
   if(etk.length)L.push("DEĞİŞTİRİRSEN ETKİLENİR ("+etk.length+"): "+etk.slice(0,8).join(", "));
   if(semb)L.push("İÇİNDEKİLER (ad:satır): "+semb);
-  L.push("KURAL: okumadığın dosyaya dokunma; tahmin bağını koda bakarak doğrula; değişiklikten sonra çağıranları derle/çalıştır.");
+  L.push("KURAL: okumadığın dosyaya dokunma; 'ad' sınıfı bağı koda bakarak doğrula; değişiklikten sonra çağıranları derle/çalıştır.");
   return L.join("\n");
 }
 function tarifTekSatir(x){
@@ -976,7 +999,7 @@ function grafVerisi(){
   const N=G;
   return {
     /* Bilinmeyen tip (kaynak vb.) varsa sürüm 3 yazılır: yükle→dışa aktar turunda sınıf kaybolmasın. */
-    surum:([...GUVEN.values()].some(t=>t!=="kesin"&&t!=="tahmin"))?3:2,
+    surum:([...GUVEN.values()].some(t=>t!=="import"&&t!=="ad"))?3:2,
     uretildi:(()=>{const d=new Date(),p2=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes())})(),
     dosya:N.map(x=>({
       i:x.id, ad:x.name, yol:x.path, ext:x.ext, satir:x.lines||0,
@@ -984,7 +1007,7 @@ function grafVerisi(){
       katman:(x.L|0)+1, sembol:(x.sembol||[]).slice(0,40), okunmadi:!!x.okunmadi, neden:x.nd||"",
       not:(x.not||notVer(x.path)||"")
     })),
-    kenar:(()=>{const r=[];N.forEach(a=>a.out.forEach(b=>r.push({a:a.id,b:b,tip:GUVEN.get(a.id+"-"+b)||"tahmin"})));return r})()
+    kenar:(()=>{const r=[];N.forEach(a=>a.out.forEach(b=>r.push({a:a.id,b:b,tip:GUVEN.get(a.id+"-"+b)||"ad"})));return r})()
   };
 }
 
@@ -1027,13 +1050,13 @@ function grafYukle(j){
   D.forEach(d=>{const y=d.yol||d.ad;if(d.not&&String(d.not).trim())NOTLAR[y]=String(d.not).trim()});notKaydet();
   G=D.map((d,i)=>({id:i,name:d.ad,path:d.yol||d.ad,ext:(d.ext||String(d.ad).split(".").pop()||""),
     group:(d.yol||"").includes("/")?(d.yol||"").split("/")[0]:"(kök)",text:null,size:0,
-    lines:d.satir||0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
+    lines:d.satir||0,belirsiz:0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
     sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):"Haritadan yüklendi ("+(j.kaynak||"kaynak")+"). Dosya metni yok; içerik için dosyayı aç.",
     defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi,
     not:(d.not&&String(d.not).trim())||notVer(d.yol||d.ad)||"",kod:"",yorumsuz:""}));
   GUVEN.clear();const tipler={};
   K.forEach(e=>{if(G[e.a]&&G[e.b]){G[e.a].out.add(e.b);G[e.b].inn.add(e.a);
-    const t=e.tip||"tahmin";tipler[t]=(tipler[t]||0)+1;GUVEN.set(e.a+"-"+e.b,t)}});
+    const t=e.tip||"ad";tipler[t]=(tipler[t]||0)+1;GUVEN.set(e.a+"-"+e.b,t)}});
   try{localStorage.removeItem(ANAHTAR)}catch(err){}
   draw();kartGuncelle();
   ["gd","png","jdis","jicL","mv"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=false});
@@ -1109,18 +1132,23 @@ function modelYaz(){
   const riskli=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size).slice(0,3).map(x=>x.name+" "+x.inn.size).join(" · ")||"—";
   const giris=girisNoktalari().slice(0,2).map(x=>x.path).join(" · ")||"—";
   const okunmadi=N.filter(x=>x.okunmadi).length, bagsiz=N.filter(x=>!x.inn.size&&!x.out.size).length;
+  const belirsiz=N.reduce((t,x)=>t+(x.belirsiz||0),0);
   const dil={};N.forEach(x=>{const e=x.ext||"yok";dil[e]=(dil[e]||0)+1});
   const L=[];
   L.push("# "+kokEtiket()+" · "+N.length+" dosya · "+bag+" bağ · KABA (ön izleme — kesin değil)");
   L.push("giriş   "+giris);
   L.push("riskli  "+riskli);
-  L.push("durum   okunmadı "+okunmadi+" · bağımsız "+bagsiz+" · belirsiz —");
+  const kapsam=N.filter(x=>bagDurum(x)==="kapsam dışı").length;
+  const bagyok=N.filter(x=>bagDurum(x)==="bağ yok").length;
+  L.push("durum   okunmadı "+okunmadi+" · kapsam dışı "+kapsam+" · bağ yok "+bagyok+" · belirsiz "+belirsiz);
   L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(" · "));
   L.push("");
-  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk)");
+  L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
+  L.push("");
+  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum)");
   N.slice().sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(x=>{
     const r=roleOf(x);
-    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+(r.risk||"—"));
+    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+(bagDurum(x)||"—"));
   });
   L.push("");
   L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");
@@ -1141,16 +1169,8 @@ addEventListener("keydown",e=>{
   if(e.key==="Escape"&&MOD==="insan")closeP();
 });
 
-/* son haritayı geri yükle */
-(function(){
-  try{
-    const s=JSON.parse(localStorage.getItem(ANAHTAR)||"null");
-    if(!s||!s.D||!s.D.length)return;
-    build(s.D.map(d=>({path:d.path,size:d.size,text:d.text})));
-    const b=document.getElementById("geriBilgi");
-    if(b){b.hidden=false;b.textContent="↺ Son harita geri yüklendi · "+s.D.length+" dosya · "+new Date(s.t).toLocaleString("tr-TR")+" · yeni dosya için sürükle ya da klasör seç"}
-  }catch(e){}
-})();
-
+/* Son harita KENDİLİĞİNDEN geri yüklenmez (Kaptan 19.11): dünkü harita bugün "güncel" sanılıyordu.
+   Dosya metinleri yine de saklanıyor (ANAHTAR) — ama kullanıcı açıkça istemeden ekrana gelmez.
+   Notlar ayrı anahtarda (semaNotlar) ve dosya yoluna bağlı; harita yüklenmese de dururlar. */
 
 </script></body></html>

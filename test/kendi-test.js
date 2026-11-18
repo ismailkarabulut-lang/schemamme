@@ -72,8 +72,9 @@ function harita(dosyalar) {
     const rol = {}; N.forEach(x => { const s = roleOf(x).short; rol[x.path] = s; });
     const bagimsiz = N.filter(x => !x.inn.size && !x.out.size).map(x => x.path);
     const gizli = N.filter(x => x.okunmadi && x.nd === "sir").map(x => ({ path: x.path, metin: x.text }));
+    const belirsiz = N.filter(x => (x.belirsiz||0) > 0).map(x => ({ path: x.path, adet: x.belirsiz }));
     const katman = {}; N.forEach(x => { katman[x.path] = x.L; });
-    return JSON.stringify({ kenar: kenar.sort(), rol, bagimsiz, gizli, katman, n: N.length });
+    return JSON.stringify({ kenar: kenar.sort(), rol, bagimsiz, gizli, belirsiz, katman, n: N.length });
   })()`));
 }
 
@@ -104,11 +105,11 @@ test("T1 JS/TS importları kesin bağ kurar", () => {
   ]);
   esit(m.n, 8, "dosya sayısı");
   esit(m.kenar, [
-    "main.js→api/client.js:kesin",
-    "main.js→style.js:kesin",
-    "main.js→view.js:kesin",
-    "page.tsx→ui/button.tsx:kesin",
-    "view.js→lib/format.js:kesin",
+    "main.js→api/client.js:import",
+    "main.js→style.js:import",
+    "main.js→view.js:import",
+    "page.tsx→ui/button.tsx:import",
+    "view.js→lib/format.js:import",
   ], "bağlar");
   esit(m.bagimsiz, ["util.js"], "gerçekten bağımsız olan");
 });
@@ -120,16 +121,17 @@ test("T2 Python 'from . import x' paket içinde çözülür", () => {
     ["pkg/helpers.py", "def h(): pass\n"],
     ["pkg/mod.py", "from . import helpers\nfrom ..pkg import helpers\n"],
   ]);
-  if (!m.kenar.some((k) => k.startsWith("pkg/mod.py→pkg/helpers.py:kesin")))
+  if (!m.kenar.some((k) => k.startsWith("pkg/mod.py→pkg/helpers.py:import")))
     throw new Error("pkg/mod.py → pkg/helpers.py kesin bağı yok · gelen: " + JSON.stringify(m.kenar));
 });
 
 /* T3 — aynı adlı dosyalar: sıra bağımsız ve belirsizse 'tahmin' */
-test("T3 aynı adlı dosyada sonuç okuma sırasından bağımsız", () => {
+test("T3 aynı adlı dosyada bağ KURULMAZ, sıra sonucu değiştirmez", () => {
   const A = harita([["a/utils.py", "def f(): pass\n"], ["b/utils.py", "def g(): pass\n"], ["main.py", "from utils import f\n"]]);
   const B = harita([["main.py", "from utils import f\n"], ["b/utils.py", "def g(): pass\n"], ["a/utils.py", "def f(): pass\n"]]);
   esit(A.kenar, B.kenar, "iki sıra aynı sonucu vermeli");
-  esit(A.kenar, ["main.py→a/utils.py:tahmin"], "belirsiz eşleşme tahmin işaretlenmeli");
+  esit(A.kenar, [], "iki aday varsa bağ kurulmaz");
+  esit(A.belirsiz, [{ path: "main.py", adet: 1 }], "belirsiz olarak sayılmalı");
 });
 
 /* T4 — yorumda geçen ad bağ üretmez */
@@ -149,8 +151,9 @@ test("T5 Kotlin uzantı alıcısı tanım sayılmaz", () => {
     ["Bolum.kt", "package x\ninternal fun View.ek() {}\n"],
     ["Kullanan.kt", "package x\nimport x.View\nclass Kullanan { fun c(v: View) {} }\n"],
   ]);
-  if (!m.kenar.some((k) => k === "Kullanan.kt→View.kt:kesin"))
-    throw new Error("Kullanan → View kesin bağı yok · gelen: " + JSON.stringify(m.kenar));
+  /* import satırı olduğu için en güçlü sınıf: "import" (yol eşleşmesi) */
+  if (!m.kenar.some((k) => k === "Kullanan.kt→View.kt:import"))
+    throw new Error("Kullanan → View import bağı yok · gelen: " + JSON.stringify(m.kenar));
   if (m.kenar.some((k) => k.startsWith("Kullanan.kt→Bolum.kt")))
     throw new Error("bağ bölüm dosyasına gitti: " + JSON.stringify(m.kenar));
 });
@@ -181,6 +184,17 @@ test("T8 not yazılır · JSON'a girer · geri yüklenir · MD'de görünür", (
   esit(JSON.parse(calistir("JSON.stringify(G.find(x=>x.path==='a.py').not)")), "kredi akışını bozar, dokunmayın", "geri yüklemede not");
   if (!calistir("buildGuide()").includes("- Not: kredi akışını bozar, dokunmayın"))
     throw new Error("MD çıktısında not satırı yok");
+});
+
+/* T9 — alias import: sessizce yutulmaz, "belirsiz" sayılır; dış paket sayılmaz */
+test("T9 alias import sessizce yutulmaz, belirsiz sayılır", () => {
+  const m = harita([
+    ["tsconfig.json", '{"compilerOptions":{"paths":{"@/*":["src/*"]}}}'],
+    ["src/main.tsx", "import App from '@/App';\nimport React from 'react';\n"],
+    ["src/App.tsx", "export default 1;\n"],
+  ]);
+  esit(m.kenar, [], "alias çözülmediği için bağ kurulmaz");
+  esit(m.belirsiz, [{ path: "src/main.tsx", adet: 1 }], "yalnız projede adı olan alias sayılır; 'react' dış pakettir");
 });
 
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
