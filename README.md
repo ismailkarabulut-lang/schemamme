@@ -50,7 +50,7 @@ Bu ayrım keyfi değil: **veri yokluğu hüküm değildir.** Okunamayan bir dosy
 - **Zip** — arşiv içinden harita (zip okuyucu **yereldir**, internet gerekmez)
 - **Tek not dosyası** (`.md` / `.txt`) — dosya değil **başlık** haritası çıkar: üst başlık → alt başlık
 
-Atlananlar: `node_modules` · `.git` · `__pycache__` · `.venv` · `build` · `.gradle` · `.idea` · `gradlew`/`mvnw` · resim/ses/video/apk/jar/zip.
+Atlananlar: `node_modules` · `.git` · `__pycache__` · `.venv` · `build` · `dist` · `.gradle` · `.idea` · `gradlew`/`mvnw` · resim/ses/video/apk/jar/zip.
 
 ## Ölçülen sonuç (16.11.2026)
 

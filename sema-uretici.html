@@ -168,7 +168,7 @@ const AYAR_EXT=new Set(["kts","gradle","properties","pro","xml","toml","yml","ya
 /* Uzantısız dosya (gradlew, LICENSE…) denenir; içinde NUL varsa ikili sayılır. */
 function okunabilirUzanti(p){const nm=String(p).split("/").pop()||p;return TXT.test(nm)||!/\.[^./]+$/.test(nm)}
 function ikili(t){return /\u0000/.test(String(t).slice(0,4096))}
-const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|\.gradle|\.build-outputs|\.idea)(\/|$)/.test(p)||/(^|\/)(gradlew|gradlew\.bat|mvnw|mvnw\.cmd)$/i.test(p)||/\.(png|jpe?g|webp|gif|ico|apk|jar|keystore|base64|ttf|otf|mp3|mp4|wav|zip|7z)$/i.test(p)};
+const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|dist|\.gradle|\.build-outputs|\.idea)(\/|$)/.test(p)||/(^|\/)(gradlew|gradlew\.bat|mvnw|mvnw\.cmd)$/i.test(p)||/\.(png|jpe?g|webp|gif|ico|apk|jar|keystore|base64|ttf|otf|mp3|mp4|wav|zip|7z)$/i.test(p)};
 /* SIR DOSYASI: anahtar/parola tutabilecek adlar. Dosya haritada GÖRÜNÜR ama metni
    okunmaz, kayda yazılmaz, karta basılmaz — .env içeriği localStorage'a düşüyordu. */
 /* ŞABLON dosya: anahtar tutmaz (boş değerler), okunması güvenli — sır sayılmaz. */
@@ -381,7 +381,7 @@ function fileGraph(E){
      Yol tabanlı olması şart: aynı adlı iki dosya varsa ada göre seçim sıraya bağlı kalır. */
   const jsIthal=(ham)=>{
     const out=[];let m;
-    const re=/\b(?:import|export)\s+(?:[^'"()\n]*?\bfrom\s+)?['"]([^'"\n]+)['"]/g;
+    const re=/\b(?:import|export)\s+(?:[^'"();]*?\bfrom\s+)?['"]([^'"\n]+)['"]/g;   /* satır atlayabilir: çok satırlı `import {\n…\n} from 'x'` kaçmasın (19.11) */
     while(m=re.exec(ham))out.push(m[1]);
     const re2=/\brequire\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
     while(m=re2.exec(ham))out.push(m[1]);
