@@ -171,6 +171,9 @@ function ikili(t){return /\u0000/.test(String(t).slice(0,4096))}
 const SKIP={test:p=>/(^|\/)(node_modules|\.git|__pycache__|\.venv|build|\.gradle|\.build-outputs|\.idea)(\/|$)/.test(p)||/(^|\/)(gradlew|gradlew\.bat|mvnw|mvnw\.cmd)$/i.test(p)||/\.(png|jpe?g|webp|gif|ico|apk|jar|keystore|base64|ttf|otf|mp3|mp4|wav|zip|7z)$/i.test(p)};
 /* SIR DOSYASI: anahtar/parola tutabilecek adlar. Dosya haritada GÖRÜNÜR ama metni
    okunmaz, kayda yazılmaz, karta basılmaz — .env içeriği localStorage'a düşüyordu. */
+/* ŞABLON dosya: anahtar tutmaz (boş değerler), okunması güvenli — sır sayılmaz. */
+const SABLON=/\.(example|sample|template|dist|defaults)$/i;
+const sirMi=p=>SIR.test(String(p||""))&&!SABLON.test(String(p||""));
 const SIR=/(^|\/)(\.env(\.[\w-]+)?|\.npmrc|\.netrc|\.pgpass|id_rsa|id_ed25519|secrets?[\w.-]*|credentials[\w.-]*)$|\.(pem|key|p12|pfx|jks|kdbx|ppk)$/i;
 /* BAĞ SINIFLARI — hiçbiri "kesin" demez:
      import = import satırı + yol eşleşmesi (ölçüm) · ad = ad kodda geçiyor, tanım tek dosyada
@@ -184,12 +187,12 @@ const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9
 function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map();
+let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map(),KOK_AD="";
 
 /* Bir dosyanın metni okunacak mı: üç engel var — okunmayan uzantı, boyut, ikili içerik.
    Üçü de "ölçülmedi" demektir; hiçbiri "kullanılmıyor" hükmü üretmez. */
 async function metinAl(p,boyut,oku){
-  if(SIR.test(p))return{t:null,okunmadi:true,neden:"sir"};
+  if(sirMi(p))return{t:null,okunmadi:true,neden:"sir"};
   if(!okunabilirUzanti(p))return{t:null,okunmadi:true,neden:"uzanti"};
   if(boyut>=BUYUK)return{t:null,okunmadi:true,neden:"boyut"};
   const t=await oku();
@@ -312,10 +315,12 @@ function kodTemizle(t,ext){
 }
 function fileGraph(E){
   const N=E.map((e,i)=>{
-    const nm=e.path.split("/").pop(),ext=(nm.includes(".")?nm.split(".").pop():"").toLowerCase();
+    const nm=e.path.split("/").pop(),
+          /* nokta ile başlayan dosyada uzantı yoktur: .gitignore · .editorconfig */
+          ext=(nm.includes(".")&&!nm.startsWith(".")?nm.split(".").pop():(nm.startsWith(".")&&nm.indexOf(".",1)>0?nm.split(".").pop():"")).toLowerCase();
     /* Sır kapısı burada da durur: hangi girişten gelirse gelsin (klasör, dosya, zip, JSON)
        sır dosyasının metni düğüme girmez, kayda yazılmaz. */
-    const sir=SIR.test(e.path), tx=sir?null:e.text;
+    const sir=sirMi(e.path), tx=sir?null:e.text;
     return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
       lines:tx?tx.split("\n").length:0,belirsiz:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext),not:notVer(e.path)||(e.not||"")};
   });
@@ -615,8 +620,8 @@ function chips(ids){
    "kullanılmıyor" demek DEĞİLDİR; hangi hâlde olduğu yazılır. */
 function bagDurum(x){
   if(x.okunmadi)return "hesaplanmadı";
-  const e=(x.ext||"").toLowerCase();
-  if(AYAR_EXT.has(e)||/^(md|txt|html|css)$/i.test(e))return "kapsam dışı";
+  const e=(x.ext||"").toLowerCase(), nm=String(x.name||"");
+  if(nm.startsWith(".")||AYAR_EXT.has(e)||/^(md|txt|html|css)$/i.test(e))return "kapsam dışı";
   if(x.belirsiz)return "belirsiz "+x.belirsiz;
   if(!x.inn.size&&!x.out.size)return "bağ yok";
   return "";
@@ -666,7 +671,13 @@ $("#q").oninput=_viewGecikmeli;$("#orph").onchange=view;
 $("#zp").onclick=()=>{Z=Math.min(1.6,Z+.2);$("#cv").style.zoom=Z};
 $("#zm").onclick=()=>{Z=Math.max(.4,Z-.2);$("#cv").style.zoom=Z};
 $("#f1").onchange=e=>ingest(e.target.files);
-$("#f2").onchange=e=>ingest(e.target.files);
+$("#f2").onchange=e=>{
+  /* Proje adı: klasör seçiminde kök klasörün adı (yol kırpılırken kayboluyordu). */
+  const f=e.target.files&&e.target.files[0];
+  const rel=f&&(f.webkitRelativePath||"");
+  KOK_AD=rel?rel.split("/")[0]:"";
+  ingest(e.target.files);
+};
 /* ---- SÜRÜKLE-BIRAK: klasör de okunur (webkitGetAsEntry + özyineleme) ---- */
 function uyar(t){const b=document.getElementById("geriBilgi");if(b){b.hidden=false;b.textContent=t}}
 const DOSYA_SINIRI=20000;
@@ -714,7 +725,7 @@ addEventListener("drop",e=>{
   for(const it of (dt.items?[...dt.items]:[])){
     if(it.kind!=="file")continue;
     const g=it.webkitGetAsEntry?it.webkitGetAsEntry():null;
-    if(g){girisler.push(g);if(g.isDirectory)klasor=true}
+    if(g){girisler.push(g);if(g.isDirectory){klasor=true;KOK_AD=g.name||KOK_AD}}
   }
   if(klasor)return klasorIngest(girisler);
   // Entry bilgisi yoksa (tarayıcı desteklemiyorsa) dosya listesiyle devam; klasörse tek kutu olur → uyar.
@@ -1024,7 +1035,7 @@ function notVer(yol){return NOTLAR[yol]||""}
 function notYaz(yol,metin){const t=String(metin==null?"":metin).trim();if(t)NOTLAR[yol]=t;else delete NOTLAR[yol];notKaydet()}
 function kaydet(E){
   const b=document.getElementById("geriBilgi");
-  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:SIR.test(d.path)?null:(d.text||null)}))}));
+  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:sirMi(d.path)?null:(d.text||null)}))}));
     if(b&&b.textContent.indexOf("Son harita kaydedilemedi")>=0){b.hidden=true;b.textContent=""}
   }catch(e){if(b){b.hidden=false;b.textContent="↺ Son harita kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur"}}}
 function indir(ad,metin,tip){
@@ -1117,6 +1128,7 @@ function modAyarla(m){
   if(m==="model"){modelYaz();panelAc(false)}else if(G.length)panelAc(true);
 }
 function kokEtiket(){
+  if(KOK_AD)return KOK_AD;          /* klasör seçildiyse gerçek ad */
   if(!G.length)return "proje";
   const p=G.map(x=>String(x.path).split("/"));let o=p[0].slice(0,-1);
   p.forEach(a=>{let i=0;while(i<o.length&&i<a.length-1&&o[i]===a[i])i++;o=o.slice(0,i)});
