@@ -74,24 +74,39 @@ path.e.est{opacity:.35;animation:eIn .9s ease both}
 path.e.kaynak{stroke:#E8B86D;opacity:.45;animation:eIn .9s ease both}
 path.e.on{stroke:var(--purple);stroke-width:2.4;opacity:1;filter:drop-shadow(0 0 7px var(--purple))}
 path.e.off{opacity:.08}
-#panel{display:none;position:fixed;left:0;right:0;bottom:0;max-height:48vh;overflow:auto;background:rgba(8,8,16,.94);color:rgba(255,255,255,.9);backdrop-filter:blur(14px);border-top:1px solid rgba(124,110,245,.35);padding:12px 14px calc(12px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px #0009}
+/* ---- YAN ALAN (PiP değil): yuvalanmış, katlanır. Örtmez → harita alanı yeniden ölçeklenir.
+   Katlı: 44 px şerit · Açık: 420 px. Üstte yazı çubuğu yok, krom yalnız şeritte. ---- */
+#govde{display:flex;flex:1;min-height:0;align-items:stretch;position:relative;z-index:1}
+#ray{flex:0 0 44px;display:flex;flex-direction:column;gap:6px;padding:8px 5px;border-right:1px solid var(--bd);background:rgba(10,10,18,.55)}
+#ray button{border:1px solid rgba(255,255,255,.12);background:none;color:rgba(255,255,255,.7);border-radius:8px;height:34px;font-size:15px;cursor:pointer;line-height:1}
+#ray button:hover{color:#fff;border-color:rgba(124,110,245,.55);background:rgba(124,110,245,.12)}
+#ozet{display:block}
+#kart{display:block}
+#panel{display:none;position:relative;flex:0 0 0px;width:0;max-height:none;overflow:auto;background:var(--pan);color:var(--fg);border-right:1px solid var(--bd);padding:0;box-shadow:none}
+body.panelAcik #panel{display:block;flex:0 0 420px;width:420px;padding:14px 16px}
+#model{display:none;flex:1;overflow:auto;padding:16px 22px;font-family:var(--fm);font-size:12px;line-height:1.55;white-space:pre;color:var(--fg)}
+body.modeModel #wrap{display:none}
+body.modeModel #model{display:block;flex:1;min-width:0}
 #panel h2{margin:0 24px 2px 0;font-size:16px}
-#panel h3{margin:12px 0 4px;font-size:12px;color:rgba(255,255,255,.55)}
-#panel .p{color:rgba(255,255,255,.55);font-size:12px;word-break:break-all}
-#panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:rgba(255,255,255,.8);font-size:22px;cursor:pointer}
-.tag{display:inline-block;border:1px solid rgba(255,255,255,.18);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:rgba(255,255,255,.6)}
-.chip{border:1px solid rgba(255,255,255,.18);background:none;color:rgba(255,255,255,.85);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
+#panel h3{margin:12px 0 4px;font-size:12px;color:var(--mut)}
+#panel .p{color:var(--mut);font-size:12px;word-break:break-all}
+#panel .x{position:absolute;right:10px;top:8px;border:0;background:none;color:var(--fg);font-size:22px;cursor:pointer;opacity:.75}
+.tag{display:inline-block;border:1px solid var(--bd);border-radius:6px;padding:1px 7px;margin:2px 4px 2px 0;font-size:11px;color:var(--mut)}
+.chip{border:1px solid var(--bd);background:none;color:var(--fg);border-radius:14px;padding:3px 10px;margin:2px 4px 2px 0;cursor:pointer;font:inherit;font-size:12px}
 /* NOT kutusu: modelin kendi açıklamasını yazdığı yer (haritada kalır) */
-.nota{margin:10px 0 0;padding:8px 10px;border:1px solid rgba(124,110,245,.35);border-radius:8px;background:rgba(124,110,245,.07)}
-.nota h3{margin:0 0 6px;font-size:10px;letter-spacing:.14em;color:#9d8cff;font-weight:700}
-.nota h3 em{font-style:normal;color:rgba(255,255,255,.45);font-size:9px;letter-spacing:.04em}
-.nota textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;border:1px solid rgba(255,255,255,.18);border-radius:6px;background:rgba(0,0,0,.25);color:#fff;font:inherit;font-size:12.5px;padding:6px 8px}
+.nota{display:block}
+.nota h3{margin:0 0 6px;font-size:10px;letter-spacing:.14em;color:#8f7dff;font-weight:700}
+.nota h3 em{font-style:normal;color:var(--mut);font-size:9px;letter-spacing:.04em}
+.nota textarea{width:100%;box-sizing:border-box;resize:vertical;min-height:44px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit;font-size:12.5px;padding:6px 8px}
 .nd.notlu b::after{content:" ✎";opacity:.85;font-weight:400}
 .legend{margin:10px auto 0;max-width:760px;color:var(--mut);font-size:11.5px;line-height:1.6;font-family:var(--fm);letter-spacing:.02em}.legend summary{cursor:pointer;letter-spacing:.14em;text-transform:uppercase}
 path.e.ah{fill:var(--edge);stroke:none;opacity:.9}path.e.ah.on{fill:#7c6cff;stroke:none;opacity:1}path.e.ah.off{opacity:.08}
 .role{margin:10px 0;padding:8px 10px;border:1px solid var(--bd);border-radius:8px;font-size:13px;line-height:1.6}
-#k4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:1100px;margin:8px auto 0;padding:0 12px;width:100%}
-@media(max-width:760px){#k4{grid-template-columns:repeat(2,1fr)}}
+/* [hidden] her yerde kazansın: #k4{display:grid} gibi kurallar hidden'ı eziyordu (kart açıkken
+   özet de görünüyordu). */
+[hidden]{display:none !important}
+#k4{display:grid;grid-template-columns:1fr 1fr;gap:8px;max-width:1100px;margin:0;padding:0;width:100%}
+@media(max-width:760px){#k4{grid-template-columns:1fr}}
 .k4i{position:relative;border:1px solid var(--bd);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:2px;min-height:62px;overflow:hidden;
 background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012));animation:ndIn .5s cubic-bezier(.2,.8,.24,1) both}
 .k4i:nth-child(1){animation-delay:.02s}.k4i:nth-child(2){animation-delay:.08s}.k4i:nth-child(3){animation-delay:.14s}.k4i:nth-child(4){animation-delay:.2s}
@@ -125,14 +140,25 @@ background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012))
 <button class="btn" id="zm" aria-label="Küçült">−</button><button class="btn" id="zp" aria-label="Büyüt">+</button>
 </div>
 <details class="legend"><summary>Nasıl okunur?</summary>Ok A → B demek “A, B’yi kullanıyor”. Üstteki kutu alttakini çağırır: en üst başlatıcılar, en alt temel parçalar. Kırmızı kesikli kutu hiçbir yere bağlı değil. Bir kutuya dokununca bağlantıları yanar ve altta sade bir açıklama açılır. <b>Düz ok</b> kesin bağdır (import ya da tanım). <b>Kesikli ok</b> tahmindir: yalnız dosya adı benzerliğinden çıkar, koda bakmadan güvenme. <b>Noktalı gri kutu</b> = dosyanın içeriği 4 MB üzeri olduğu için okunmadı; rolü ve bağları hesaplanmadı, "kullanılmıyor" demek değildir.</details></header>
-<section id="k4" hidden></section>
-<div id="geriBilgi" hidden></div>
+<div id="govde">
+<aside id="panel">
+<div id="ozet"><section id="k4" hidden></section></div>
+<div id="kart" hidden></div>
 <div id="anahtar" hidden></div>
+<div id="geriBilgi" hidden></div>
+</aside>
+<div id="ray">
+<button id="rayOzet" title="Özet" aria-label="Özet">⌂</button>
+<button id="rayMod" title="Mod: insan ⇄ model" aria-label="Mod">👁</button>
+<button id="rayAnahtar" title="Renk anahtarı" aria-label="Renk anahtarı">?</button>
+<button id="rayKapat" title="Paneli kapat" aria-label="Kapat">✕</button>
+</div>
 <main id="wrap">
 <div id="empty"><b>Dosyaları buraya bırak</b><span>Klasör, zip, birden çok dosya ya da tek bir not dosyası (.md / .txt)</span></div>
 <div id="cv"><svg id="sv"></svg></div>
 </main>
-<aside id="panel"></aside>
+<main id="model"><pre id="modelMetin"></pre></main>
+</div>
 <script src="jszip.min.js"></script>
 <script>
 /* OKUNAN: içeriği metin olarak okunabilen uzantılar — TEK KAYNAK.
@@ -215,9 +241,10 @@ function build(E){
   heading=E.length===1&&!!E[0].text&&/\.(md|txt)$/i.test(E[0].path);
   G=heading?headingGraph(E[0]):fileGraph(E);
   G=etiketAyirt(G);
-  /* Yeni harita gelince açık panel KAPANIR: eski dosyanın kartı yeni haritanın üstünde kalırsa
-     yanlış dosyayı anlatır (panel indeksleri yeni G'ye göre kayar). */
-  const P0=document.getElementById("panel");if(P0){P0.style.display="none";P0.innerHTML=""}
+  /* Yeni harita gelince KART kapanır, ÖZET kalır: eski dosyanın kartı yeni haritanın üstünde
+     kalırsa yanlış dosyayı anlatır (indeksler yeni G'ye göre kayar). Panel yapısı silinmez. */
+  const K0=document.getElementById("kart");if(K0){K0.innerHTML="";K0.hidden=true}
+  const O0=document.getElementById("ozet");if(O0)O0.hidden=false;
   sel=-1;draw();
 }
 function summ(t,ext){
@@ -546,8 +573,10 @@ function draw(){
       c2.appendChild(am);sv0.appendChild(c2);
     });
   }
-  const fit=(cv.parentElement.clientWidth-24)/Wt;
-  cv.style.zoom=Math.min(Z, fit>0?fit:1);
+  /* TÜM HARİTA EKRANA SIĞAR (Kaptan 19.11): ölçek hem genişliğe hem yüksekliğe göre seçilir.
+     Ölçek hesabı ayrı fonksiyonda: panel açılıp kapandıkça alan değişiyor, haritayı yeniden
+     çizmeye gerek yok — yalnız ölçek tazelenir (sigdir). */
+  SON_W=Wt;SON_H=y;sigdir();
   view();
 }
 function view(){
@@ -572,7 +601,7 @@ function chips(ids){
   return ids.size?[...ids].map(i=>'<button class="chip" data-go="'+i+'" style="border-color:'+col[G[i].group]+'">'+esc(G[i].name)+"</button>").join(""):'<span class="p">yok</span>';
 }
 function pick(i){
-  sel=i;view();const x=G[i],P=$("#panel");
+  sel=i;view();const x=G[i],P=$("#kart");
   const kb=x.size?(x.size/1024).toFixed(1)+" KB":"";
   const okunmadiEtiket=(x.nd==="sir"?"içerik okunmadı: sır dosyası (anahtar/parola tutabilir) — rol/bağ verilmez":x.nd==="uzanti"?"içerik okunmadı: bu uzantı okunmuyor ("+(x.ext||"uzantısız")+") — rol/bağ verilmez":x.nd==="ikili"?"içerik okunmadı: ikili dosya — rol/bağ verilmez":"içerik okunmadı: 4 MB üzeri — rol/bağ hesaplanmadı");
   const status=heading?"":(x.okunmadi?'<span class="tag" style="color:#8A93A6">'+okunmadiEtiket+'</span>':(roleOf(x).short==="yapılandırma"||roleOf(x).short==="belge")?'<span class="tag">'+roleOf(x).short+': kod bağı kurmaz · "kullanılmıyor" hükmü yok</span>':!x.inn.size&&!x.out.size?'<span class="tag" style="color:var(--hot)">bağımsız: hiçbir bağlantı yok</span>':!x.inn.size?'<span class="tag">giriş noktası: kimse çağırmıyor</span>':"");
@@ -586,7 +615,8 @@ function pick(i){
     +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
     +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
     ;
-  P.style.display="block";
+  /* Yan alan: kart görünür, özet gizlenir; panel açık kalır (haritayı örtmez, alanı daraltır). */
+  P.hidden=false;const oz=$("#ozet");if(oz)oz.hidden=true;document.body.classList.add("panelAcik");
   /* Not yazımı: 250 ms sonra kaydet (her tuşta localStorage'a yazmamak için). */
   const nk=document.getElementById("notaKutu");
   if(nk){
@@ -596,7 +626,7 @@ function pick(i){
     nk.addEventListener("blur",()=>{clearTimeout(z);notYaz(x.path,nk.value);x.not=String(nk.value||"").trim();isaretle()});
   }
 }
-function closeP(){sel=-1;$("#panel").style.display="none";view()}
+function closeP(){sel=-1;const k=$("#kart");if(k)k.hidden=true;const o=$("#ozet");if(o)o.hidden=false;view()}
 $("#cv").addEventListener("click",e=>{const n=e.target.closest(".nd");n?pick(+n.dataset.i):closeP()});
 $("#cv").addEventListener("keydown",e=>{if(e.key==="Enter"){const n=e.target.closest(".nd");if(n)pick(+n.dataset.i)}});
 $("#panel").addEventListener("click",e=>{
@@ -831,7 +861,8 @@ function kartGuncelle(){
   /* renk anahtarı: renk ne anlatıyor */
   const an=document.getElementById("anahtar");
   if(an){
-    an.hidden=heading;
+    /* Renk anahtarı varsayılan KAPALI: üstte/panelde sürekli yazı durmaz, şeritteki ? ile açılır. */
+    an.hidden=true;
     if(!heading){
       const R=[["başlatıcı","giriş noktası"],["aracı","orta halka"],["temel parça","ortak temel"],["bölüm","sınıfın parçası"],["test","test dosyası"],["bağımsız","bağlantısız"]];
       an.innerHTML=R.map(([r,ac])=>'<span><i style="background:'+ROL_RENK[r]+'"></i>'+r+'<em>· '+ac+'</em></span>').join("")
@@ -1032,6 +1063,8 @@ const _buildOnce=build;
 build=function(E){
   _buildOnce(E);kartGuncelle();kaydet(E);
   ["jdis","jicL"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=!G.length});
+  /* Yeni harita: özet yan alanda görünür (üstte yazı yok). Model modundaysa metni tazele. */
+  if(MOD==="model")modelYaz();else if(G.length){closeP();panelAc(true)}
 };
 const _pngBtn=document.getElementById("png");if(_pngBtn)_pngBtn.onclick=pngIndir;
 const _jdis=document.getElementById("jdis");if(_jdis)_jdis.onclick=jsonIndir;
@@ -1040,6 +1073,79 @@ if(_jic)_jic.onchange=e=>{const f=e.target.files&&e.target.files[0];if(f)jsonYuk
 /* Boş ekranda da erişilebilir: hazır bir haritayı yüklemek ilk adım olabilir (eskiden gizliydi). */
 const _jicL0=document.getElementById("jicL");if(_jicL0)_jicL0.hidden=false;
 kartGuncelle();
+
+/* ===== YAN ALAN + İKİ MOD (insan / model) =====
+   İnsan modu: harita arka planda, sol yan alan özet + kart.
+   Model modu: harita kapanır, yerine tek sütun sabit genişlikli metin — modelin okuduğu yer. */
+let MOD="insan";
+/* Harita ölçeği: hem genişlik hem yükseklik sığsın. draw() boyutları yazar, sigdir() ölçekler.
+   Panel açılıp kapandıkça alan değişir → yeniden çizmeden yalnız ölçek tazelenir. */
+let SON_W=0,SON_H=0;
+function sigdir(){
+  const cv=document.getElementById("cv");if(!cv||!SON_W||!SON_H)return;
+  const p=cv.parentElement;if(!p)return;
+  const fw=(p.clientWidth-24)/SON_W, fh=(p.clientHeight-24)/SON_H;
+  const f=Math.min(fw,fh);
+  cv.style.zoom=Math.min(Z, f>0?f:1);
+}
+const _el=id=>document.getElementById(id);
+function panelAc(ac){
+  const vardı=document.body.classList.contains("panelAcik");
+  document.body.classList.toggle("panelAcik",ac);
+  if(vardı!==ac&&G.length)sigdir();     /* alan değişti → harita yeniden sığdırılır */
+}
+function modAyarla(m){
+  MOD=m;document.body.classList.toggle("modeModel",m==="model");
+  const b=_el("rayMod");if(b)b.textContent=(m==="model")?"🧠":"👁";
+  if(m==="model"){modelYaz();panelAc(false)}else if(G.length)panelAc(true);
+}
+function kokEtiket(){
+  if(!G.length)return "proje";
+  const p=G.map(x=>String(x.path).split("/"));let o=p[0].slice(0,-1);
+  p.forEach(a=>{let i=0;while(i<o.length&&i<a.length-1&&o[i]===a[i])i++;o=o.slice(0,i)});
+  return o.length?o[o.length-1]:"proje";
+}
+const yas=(s,n)=>{s=String(s==null?"":s);return s.length>n?s.slice(0,n-1)+"…":s+" ".repeat(n-s.length)};
+/* Model modu metni: her satır TEK alan. Ölçüm (yol, satır, sembol) işaretsiz; yorum alanları sonda.
+   Kaynak her zaman yazılır: bu motor KABA'dır (regex ön izleme) — "kesin" demez. */
+function modelYaz(){
+  const p=_el("modelMetin");if(!p)return;
+  if(!G.length){p.textContent="harita yok — bir klasör, zip ya da JSON yükle";return}
+  const N=G, bag=N.reduce((s,x)=>s+x.out.size,0);
+  const riskli=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size).slice(0,3).map(x=>x.name+" "+x.inn.size).join(" · ")||"—";
+  const giris=girisNoktalari().slice(0,2).map(x=>x.path).join(" · ")||"—";
+  const okunmadi=N.filter(x=>x.okunmadi).length, bagsiz=N.filter(x=>!x.inn.size&&!x.out.size).length;
+  const dil={};N.forEach(x=>{const e=x.ext||"yok";dil[e]=(dil[e]||0)+1});
+  const L=[];
+  L.push("# "+kokEtiket()+" · "+N.length+" dosya · "+bag+" bağ · KABA (ön izleme — kesin değil)");
+  L.push("giriş   "+giris);
+  L.push("riskli  "+riskli);
+  L.push("durum   okunmadı "+okunmadi+" · bağımsız "+bagsiz+" · belirsiz —");
+  L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(" · "));
+  L.push("");
+  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk)");
+  N.slice().sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(x=>{
+    const r=roleOf(x);
+    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+(r.risk||"—"));
+  });
+  L.push("");
+  L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");
+  N.slice().sort((a,b)=>b.inn.size-a.inn.size).slice(0,10).forEach(x=>{
+    const oku=[...x.out].map(i=>G[i].name).slice(0,4).join(", ")||"—";
+    L.push(yas(x.path,54)+" → "+oku);
+  });
+  p.textContent=L.join("\n");
+}
+const _rz=_el("rayOzet"),_rk=_el("rayKapat"),_rm=_el("rayMod"),_ra=_el("rayAnahtar");
+if(_rz)_rz.onclick=()=>{closeP();panelAc(true)};
+if(_ra)_ra.onclick=()=>{const a=_el("anahtar");if(!a)return;const ac=!a.hidden;a.hidden=ac?true:false;if(!a.hidden)panelAc(true)};
+if(_rk)_rk.onclick=()=>panelAc(!document.body.classList.contains("panelAcik"));
+if(_rm)_rm.onclick=()=>modAyarla(MOD==="insan"?"model":"insan");
+addEventListener("keydown",e=>{
+  if(e.target&&/INPUT|TEXTAREA/.test(e.target.tagName))return;
+  if(e.key==="m"||e.key==="M")modAyarla(MOD==="insan"?"model":"insan");
+  if(e.key==="Escape"&&MOD==="insan")closeP();
+});
 
 /* son haritayı geri yükle */
 (function(){
