@@ -109,6 +109,29 @@ Terminal=false
 - **Sır dosyaları** (`.env`, `*.key`, `secrets*`, `id_rsa`…): haritada görünür, metni
   okunmaz, `localStorage`'a ve çıktılara yazılmaz. Kutu "okunmadı · sır" der.
 
+## Model döngüsü (notlar)
+
+Harita iki yönlü: her dosyanın serbest metin **notu** var. Panelde yazılır, **dosya yoluna**
+bağlı saklanır (sayfa kapanınca ya da klasör yeniden taranınca kaybolmaz), JSON'da `not`
+alanı olarak taşınır, MD çıktısında `- Not:` satırı olarak görünür, notu olan kutu ✎ ile
+işaretlenir.
+
+Modelin ürettiği açıklamayı haritaya geri yazmak için:
+
+```bash
+# 1) uygulamada "JSON indir" → sema-graph.json
+# 2) model çıktısı: JSON ({"yol":"not"} · {"notlar":{…}} · [{"yol","not"}] · harita biçimi)
+#    ya da MD ("### yol" başlığı altında "- Not: …")
+python3 not-birlestir.py --harita sema-graph.json --gelen model-cikti.md   # yerinde günceller, .yedek alır
+python3 not-birlestir.py --harita … --gelen … --kuru                      # yazmadan yalnız rapor
+python3 not-birlestir.py --kendini-test                                   # 12 test
+```
+
+Kural: **elle yazılmış not ezilmez** — boş alan doldurulur, aynı not iki kez yazılmaz,
+haritada olmayan yol dosya uydurmaz. Rapor dört sayaç basar: eklendi · korundu (elle) ·
+zaten vardı · haritada yok. Birleşmiş JSON'u uygulamada açınca notlar panelde ve haritada
+görünür.
+
 ## Kendi testi
 
 ```bash
@@ -128,6 +151,7 @@ sema-uretici.html   ← uygulamanın tamamı (tek dosya, ~60 KB)
 main.js             ← Electron kabuğu (pencere açar, dış bağlantıları tarayıcıya devreder)
 baslat.sh           ← Electron varsa onu, yoksa tarayıcıyı açar
 jszip.min.js        ← zip okuyucu, yerel (JSZip 3.10.1, MIT)
+not-birlestir.py    ← modelin notlarını harita JSON'una birleştirir (kendi testi var)
 icon.png            ← simge
 test/kendi-test.js  ← motor testleri (node, tarayıcısız)
 docs/               ← akis.gif (akış animasyonu) · uygulama.gif (gerçek uygulama) · harita.png · akis.svg · kareler/
