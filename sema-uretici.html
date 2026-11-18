@@ -471,6 +471,33 @@ function fileGraph(E){
     /* Dosya adı benzerliğinden bağ üretme KALDIRILDI (Kaptan 19.11): "GorevBolumu.kt"
        projede hiç geçmediği hâlde merkeze oturuyordu. Ölçüm olmayan bağ, eksik bağdan kötüdür. */
   });
+
+  /* --- METİN SABİTİ BAĞI (en zayıf sınıf) ---
+     Tek dosyalık uygulamalarda gerçek bağ import değil, YOL ile kurulur:
+     server.py:916  (HERE / "index.html").read_bytes()  ·  test-esikler.py  Path("…/server.py")
+     Ölçüm: bu dosyanın metninde o dosya adı TIRNAK İÇİNDE yazıyor. Yorum değil, sabit metin.
+     Yorumda geçen ad bağ üretmez: yalnız tırnak içi aranır. */
+  const adHarita={};
+  N.forEach(x=>{if(!x.okunmadi&&x.name&&x.name.length>=5)adHarita[x.name]=x});
+  const metinBag=(a,b,tip)=>{
+    if(!b||b===a)return;
+    a.out.add(b.id);b.inn.add(a.id);
+    const k=a.id+"-"+b.id, eski=GUVEN.get(k);
+    if(!eski||(TIP_SIRA[tip]??9)<(TIP_SIRA[eski]??9))GUVEN.set(k,tip);
+  };
+  if(Object.keys(adHarita).length){
+    N.forEach(a=>{
+      if(a.okunmadi||!a.text||!a.text.length)return;
+      const sabitler=a.text.match(/["'`][^"'`\n]{3,160}["'`]/g);
+      if(!sabitler)return;
+      for(const s of sabitler){
+        const parca=s.slice(1,-1).trim().split(/[\/\\]/).pop();
+        if(parca.length<5||parca===a.name)continue;
+        const h=adHarita[parca];
+        if(h)metinBag(a,h,"kaynak");
+      }
+    });
+  }
   return N;
 }
 function headingGraph(e){

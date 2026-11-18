@@ -207,5 +207,25 @@ test("T10 çok satırlı import bağ kurar", () => {
   esit(m.bagimsiz, [], "telemetry bağımsız sayılmamalı");
 });
 
+/* T11 — tek dosyalık uygulamada bağ import değil YOL ile kurulur: tırnak içindeki dosya adı */
+test("T11 tırnak içindeki dosya adı 'kaynak' bağı kurar", () => {
+  const m = harita([
+    ["server.py", 'from pathlib import Path\nHERE=Path(__file__).parent\nbody=(HERE/"index.html").read_bytes()\n'],
+    ["test-esikler.py", 'import importlib.util\nfrom pathlib import Path\nSRC=Path("/tmp/proje/server.py")\n'],
+    ["index.html", "<html><body>kokpit</body></html>\n"],
+  ]);
+  const kaynak = m.kenar.filter(k => k.indexOf(":kaynak") > 0).sort();
+  esit(kaynak, ["server.py→index.html:kaynak", "test-esikler.py→server.py:kaynak"], "iki yol bağı da kurulmalı");
+});
+
+/* T12 — yorumda geçen dosya adı bağ ÜRETMEZ (yalnız tırnak içi ölçülür) */
+test("T12 yorumdaki dosya adı kaynak bağı üretmez", () => {
+  const m = harita([
+    ["a.py", "# index.html dosyasını okur\nprint(1)\n"],
+    ["index.html", "<html></html>\n"],
+  ]);
+  esit(m.kenar, [], "yorum satırı bağ kurmamalı");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
