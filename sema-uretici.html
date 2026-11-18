@@ -53,6 +53,11 @@ animation:ndIn .52s cubic-bezier(.2,.8,.24,1) both;animation-delay:calc(var(--i,
 .nd.ri::before{height:3px;opacity:1}
 .nd.canli::before{animation:nefes 3.6s ease-in-out infinite}
 @keyframes ndIn{from{opacity:0;transform:translateY(10px) scale(.97)}to{opacity:1;transform:none}}
+/* Büyük haritada süs kapanır: 2.000 kutuda giriş animasyonu ve gölge çizimi yavaşlatıyordu. */
+body.sade .nd{animation:none}
+body.sade .nd.ri{box-shadow:none}
+body.sade .nd.canli::before{animation:none}
+body.sade .nd:hover{transform:none}
 @keyframes nefes{0%,100%{opacity:.5;box-shadow:none}50%{opacity:1;box-shadow:0 0 16px var(--nc)}}
 @keyframes ciz{to{stroke-dashoffset:0}}
 @keyframes eIn{from{opacity:0}to{opacity:.6}}
@@ -246,7 +251,12 @@ function okunmadiMetni(e){
   if(e.neden==="ikili")return "İçerik okunmadı: dosyada metin dışı baytlar var (ikili). Rol ve bağ çıkarılamadı.";
   return "Dosya 4 MB üzeri olduğu için metni okunmadı; yalnız adı ve boyutu biliniyor. Rol ve bağ çıkarılamaz.";
 }
-function kodTemizle(t,ext){
+/* İki ayrı temizlik var ve karıştırılmamalı:
+   · yorumSil  → yalnız YORUMU siler, metin sabitleri KALIR. Dil importları yolu bir
+                 metin sabitinde taşır ('./view'); yol silinirse bağ kaybolur.
+   · kodTemizle→ yorumu ve metin sabitlerini siler. Kelime eşleşmesi (DECL/jeton) bununla
+                 yapılır ki yorumda geçen ad sahte bağ üretmesin. */
+function yorumSil(t,ext){
   if(!t)return "";
   let s=String(t);
   const e=String(ext||"").toLowerCase();
@@ -256,6 +266,11 @@ function kodTemizle(t,ext){
     s=s.replace(/\/\*[\s\S]*?\*\//g," ");
     s=s.replace(/\/\/[^\n]*/g," ");
   }
+  return s;
+}
+function kodTemizle(t,ext){
+  if(!t)return "";
+  let s=yorumSil(t,ext);
   s=s.replace(/"""[\s\S]*?"""/g,'""');
   s=s.replace(/'''(?:[\s\S]*?)'''/g,"''");
   s=s.replace(/`(?:\\[\s\S]|[^`\\])*`/g,'""');
@@ -270,15 +285,26 @@ function fileGraph(E){
        sır dosyasının metni düğüme girmez, kayda yazılmaz. */
     const sir=SIR.test(e.path), tx=sir?null:e.text;
     return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
-      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext)};
+      lines:tx?tx.split("\n").length:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext)};
   });
-  const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={};
+  const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={},byPath={},byStemList={};
+  const yolNorm=p=>String(p||"").replace(/\\/g,"/").replace(/\/{2,}/g,"/").replace(/^\.\//,"");
+  /* Aynı adlı iki dosya varsa seçim OKUMA SIRASINDAN BAĞIMSIZ olmalı: kaynağa en yakın yol
+     kazanır, eşitlikte alfabetik. (Kotlin için yapılan düzeltmenin aynısı js/py'de de şart:
+     a/utils.py + b/utils.py varken "from utils import x" sıraya göre başka dosyaya bağlanıyordu.) */
+  const uzaklik=(a,b)=>{const pa=yolNorm(a).split("/"),pb=yolNorm(b).split("/");pa.pop();let i=0;while(i<pa.length&&i<pb.length&&pa[i]===pb[i])i++;return (pa.length-i)+(pb.length-i);};
+  const sec=(adaylar,kaynak)=>{
+    if(!adaylar||!adaylar.length)return null;
+    if(adaylar.length===1)return adaylar[0];
+    return adaylar.slice().sort((x,y)=>uzaklik(x.path,kaynak)-uzaklik(y.path,kaynak)||String(x.path).localeCompare(String(y.path)))[0];
+  };
   /* Dış kütüphane kökleri: bunlardan gelen adlar proje dosyasıyla EŞLEŞTİRİLMEZ.
      (Örn. androidx.compose.ui.graphics.Color → Color.kt sanılıyordu.) */
   const DIS=/^(android|androidx|kotlin|kotlinx|java|javax|dalvik|sun|org|com\.google|com\.squareup|com\.android|okhttp3|retrofit2|io\.|org\.)/;
   GUVEN=new Map();
   N.forEach(n=>{
     if(!byName[n.name])byName[n.name]=n;
+    byPath[yolNorm(n.path)]=n;
     if(n.text&&(n.ext==="kt"||n.ext==="java")){
       let m;
       /* Proje paketi: "package com.example.ui.theme" → PAKET["com.example.ui.theme.Color"] */
@@ -299,6 +325,7 @@ function fileGraph(E){
       }
     }
     const st=n.name.replace(/\.[^.]+$/,"");
+    (byStemList[st]=byStemList[st]||[]).push(n);
     if(/^(py|js|mjs|ts|tsx|jsx|css|json|sh|kt)$/.test(n.ext)&&!byStem[st])byStem[st]=n;
   });
   /* Aynı ada çok talip varsa seçim OKUMA SIRASINDAN BAĞIMSIZ olmalı:
@@ -313,6 +340,56 @@ function fileGraph(E){
     DECL[ad]=adaylar[0];
     if(adaylar.length>1)CAKISMA[ad]=adaylar.map(x=>x.path);
   });
+  /* ---- İMPORT ÇÖZÜMÜ: dil bazlı, YOL tabanlı ----
+     Yol tabanlı olması şart: aynı adlı iki dosya varsa ada göre seçim sıraya bağlı kalır. */
+  const jsIthal=(ham)=>{
+    const out=[];let m;
+    const re=/\b(?:import|export)\s+(?:[^'"()\n]*?\bfrom\s+)?['"]([^'"\n]+)['"]/g;
+    while(m=re.exec(ham))out.push(m[1]);
+    const re2=/\brequire\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
+    while(m=re2.exec(ham))out.push(m[1]);
+    const re3=/\bimport\s*\(\s*['"]([^'"\n]+)['"]\s*\)/g;
+    while(m=re3.exec(ham))out.push(m[1]);
+    return [...new Set(out)];
+  };
+  const jsCoz=(spec,kaynak)=>{
+    if(!spec||!/^\.{1,2}\//.test(spec))return null;      /* paket adı → dış kütüphane */
+    const d=yolNorm(kaynak).split("/");d.pop();
+    spec.split("/").forEach(p=>{if(p===".")return;if(p==="..")d.pop();else d.push(p)});
+    const t=d.join("/");
+    const aday=[t,t+".js",t+".mjs",t+".cjs",t+".jsx",t+".ts",t+".tsx",t+".vue",t+".svelte",t+".json",
+                t+"/index.js",t+"/index.ts",t+"/index.tsx",t+"/index.jsx"];
+    for(const c of aday){const n=byPath[c];if(n)return{node:n,kesin:true}}
+    return null;
+  };
+  const pyIthal=(kod)=>{
+    const out=[];let m;
+    const re=/^[ \t]*from[ \t]+(\.*)([\w.]*)[ \t]+import[ \t]+(.+)$/gm;
+    while(m=re.exec(kod)){
+      const nokta=m[1].length, mod=m[2], adlar=m[3].replace(/[()]/g,"");
+      out.push({nokta,mod});
+      /* "from . import helpers, x" → her ad ayrı modül */
+      if(nokta>0&&!mod)adlar.split(",").forEach(x=>{const s=x.trim().split(/\s+as\s+/)[0].trim();if(/^\w+$/.test(s))out.push({nokta,mod:s})});
+    }
+    const re2=/^[ \t]*import[ \t]+([\w.]+(?:[ \t]*,[ \t]*[\w.]+)*)/gm;
+    while(m=re2.exec(kod))m[1].split(",").forEach(s=>{const ad=s.trim().split(".")[0];if(ad)out.push({nokta:0,mod:ad})});
+    return out;
+  };
+  const pyCoz=(it,kaynak)=>{
+    const d=yolNorm(kaynak).split("/");d.pop();
+    if(it.nokta>0){
+      for(let k=0;k<it.nokta-1;k++)d.pop();
+      const t=[...d,...(it.mod?it.mod.split("."):[])].join("/");
+      for(const c of [t+".py",t+"/__init__.py"]){const n=byPath[c];if(n)return{node:n,kesin:true}}
+      return null;
+    }
+    const son=(it.mod||"").split(".").pop();
+    const adaylar=(byStemList[son]||[]).filter(x=>x.ext==="py");
+    if(!adaylar.length)return null;
+    const n=sec(adaylar,kaynak);
+    /* aynı adlı birden çok dosya varsa "kesin" demeyiz: en yakın seçildi, tahmin işaretlenir */
+    return {node:n,kesin:adaylar.length===1};
+  };
   N.forEach(a=>{
     if(!a.text)return;
     if(AYAR_EXT.has((a.ext||"").toLowerCase())||/^(md|txt)$/i.test(a.ext))return;   /* belge ve ayar dosyası kod bağı kurmaz */
@@ -323,19 +400,27 @@ function fileGraph(E){
       const k=a.id+"-"+b.id, eski=GUVEN.get(k);
       if(!eski||(TIP_SIRA[tip]??9)<(TIP_SIRA[eski]??9))GUVEN.set(k,tip);
     };
-    /* Bağ kurma YALNIZ temiz kod üzerinden: yorum ve metin sabiti bağ üretmez. */
-    const kod=a.kod||"";
+    /* İki kaynak: import satırları YORUMSUZ metinden (yol bir metin sabitidir),
+       kelime eşleşmesi TEMİZ koddan (yorumda geçen ad bağ üretmesin). */
+    const kod=a.kod||"", yor=a.yorumsuz||"";
     if(a.ext==="kt"||a.ext==="java"){
       [...new Set(kod.match(/\b[A-Z]\w{3,}\b/g)||[])].forEach(w=>add(DECL[w],"kesin"));
       /* import: yalnız proje paketiyle TAM eşleşme; dış kütüphane yok sayılır */
       let m;const rk=/^\s*import\s+([\w.]+)/gm;
       while(m=rk.exec(kod)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"kesin")}
     }
-    for(const nm in byName)if(nm.length>=4&&kod.includes(nm))add(byName[nm],"tahmin");
-    let m;const r1=/^\s*(?:from|import)\s+([\w.]+)/gm;
-    while(m=r1.exec(kod)){if(/^(py|js|mjs|ts|tsx|jsx)$/.test(a.ext)){const p=m[1].split(".");add(byStem[p[p.length-1]],"kesin")}}
-    const r2=/(?:from\s+|require\(\s*|import\s+)["'](\.{0,2}\/?[^"']+)["']/g;
-    while(m=r2.exec(kod))add(byStem[m[1].split("/").pop().replace(/\.[^.]+$/,"")],"kesin");
+    /* JS/TS: import ... from '…' · export … from '…' · import '…' · require('…') · import('…') */
+    if(/^(js|mjs|cjs|jsx|ts|tsx|vue|svelte)$/.test(a.ext)){
+      jsIthal(yor).forEach(sp=>{const h=jsCoz(sp,a.path);if(h)add(h.node,h.kesin?"kesin":"tahmin")});
+    }
+    /* PYTHON: import x · from x import y · from . import y · from ..pkg import z */
+    if(a.ext==="py"){
+      pyIthal(kod).forEach(it=>{const h=pyCoz(it,a.path);if(h)add(h.node,h.kesin?"kesin":"tahmin")});
+    }
+    /* Dosya adı benzerliği: JETON tabanlı. Eskiden her dosya için tüm adlar `includes` ile
+       taranıyordu (O(N²)) — 2.000 dosyada 0,9 sn sırf buradaydı. */
+    const jt=kod.match(/[A-Za-z0-9_$.-]+/g);
+    if(jt)new Set(jt).forEach(w=>{if(w.length>=4){const b=byName[w];if(b&&b!==a)add(b,"tahmin")}});
   });
   return N;
 }
@@ -358,15 +443,22 @@ function headingGraph(e){
   return N;
 }
 function draw(){
-  const N=G,n=N.length,GX=18,GY=52;
-  const sS={};const dfs=a=>{sS[a.id]=1;let m=0;a.out.forEach(b=>{if(sS[b]===1)return;if(sS[b]!==2)dfs(N[b]);m=Math.max(m,N[b].H+1)});a.H=m;sS[a.id]=2};N.slice().sort((p,q)=>(p.inn.size-p.out.size)-(q.inn.size-q.out.size)).forEach(a=>{if(!sS[a.id])dfs(a)});const mx=Math.max(0,...N.map(a=>a.H));
+  /* ÇİZİM SINIRI: her kutu ayrı bir DOM düğümü. Ölçüm (bugün): 2.000 dosya ~1,1 sn,
+     5.000 dosya 5 sn'yi aşıyor ve tarayıcı kilitleniyor. Görünür küme sınırlanır;
+     rol/bağ hesabı, arama ve JSON · MD çıktısı TÜM dosyaları kapsamaya devam eder. */
+  const LIMIT=2500, tam=G, kirpik=tam.length>LIMIT;
+  const N=kirpik?tam.slice().sort((a,b)=>b.inn.size-a.inn.size||(b.lines||0)-(a.lines||0)||String(a.path).localeCompare(String(b.path))).slice(0,LIMIT):tam;
+  const n=N.length,GX=18,GY=52;
+  const byId={};N.forEach(x=>byId[x.id]=x);
+  /* 800 üstünde süs kapanır (animasyon/gölge/ok ucu) — 2.000 kutuda ölçülen yavaşlık buradan. */
+  const sade=n>800;document.body.classList.toggle("sade",sade);
+  if(kirpik){const b=document.getElementById("geriBilgi");
+    if(b){b.hidden=false;b.textContent="⚠ "+tam.length+" dosyadan "+LIMIT+" kutu çizildi (en çok bağlı olanlar). Rol/bağ hesabı ve JSON · MD çıktısı tüm dosyaları kapsar."}}
+  const sS={};const dfs=a=>{sS[a.id]=1;let m=0;a.out.forEach(b=>{const B=byId[b];if(!B)return;if(sS[b]===1)return;if(sS[b]!==2)dfs(B);m=Math.max(m,B.H+1)});a.H=m;sS[a.id]=2};N.slice().sort((p,q)=>(p.inn.size-p.out.size)-(q.inn.size-q.out.size)).forEach(a=>{if(!sS[a.id])dfs(a)});const mx=Math.max(0,...N.map(a=>a.H));
   const bagli=N.filter(a=>a.inn.size||a.out.size), mxB=bagli.length?Math.max(0,...bagli.map(a=>a.H)):0, BAGSIZ_KAT=mxB+1;
   /* Bağı olmayan dosya (ne çağıran ne çağrılan) zincire girmez → ayrı "bağsız" şeridi.
      Önceden en dip katmana gömülüyordu; build.gradle.kts ile Color.kt aynı şeritte görünüyordu. */
   N.forEach(a=>a.L=(a.inn.size||a.out.size)?(mxB-a.H):BAGSIZ_KAT);
-  for(let i=0;i<0;i++){let ch=false;
-    N.forEach(a=>a.out.forEach(b=>{const t=Math.min(a.L+1,9);if(N[b].L<t){N[b].L=t;ch=true}}));
-    if(!ch)break}
   /* ---- KUTU HACMİ = SATIR SAYISI (karekök ölçek: dev dosya taşırmasın) ---- */
   const mxL=Math.max(1,...N.map(x=>x.lines||1));
   N.forEach(x=>{
@@ -406,11 +498,11 @@ function draw(){
     return "";};
   if(!heading)labs.forEach(([k,yy],i)=>{h+='<text class="lbl" data-k="'+k+'" x="6" y="'+(yy-6)+'" fill="#8f8fa6" font-size="11">'+(KATLI.has(k)?'▸ ':'▾ ')+(k===BAGSIZ_KAT?'bağsız':(k+1)+'. katman')+(i===0?katEtiket(k,true,false):(i===labs.length-1&&labs.length>1?katEtiket(k,false,true):''))+(KATLI.has(k)?' ('+lv[k].length+' dosya)':'')+'</text>'});
   N.forEach(a=>{if(KATLI.has(a.L))return;a.out.forEach(b=>{
-    const B=N[b];if(KATLI.has(B.L))return;
+    const B=byId[b];if(!B||KATLI.has(B.L))return;
     const x1=a.x+(a.w||168)/2,y1=a.y+(a.h||62),x2=B.x+(B.w||168)/2,y2=B.y,d=Math.max(30,Math.abs(y2-y1)/2);
     const tip=GUVEN.get(a.id+"-"+b)||"tahmin";
     h+='<path class="e'+(tip==="kesin"?"":(tip==="tahmin"?" est":" kaynak"))+'" data-a="'+a.id+'" data-b="'+b+'" data-tip="'+tip+'" d="M'+x1+' '+y1+' C'+x1+' '+(y1+d)+' '+x2+' '+(y2-d)+' '+x2+' '+y2+'"'+(tip!=="kesin"?' stroke-dasharray="4 4"':'')+'><title>'+(TIP_AD[tip]||tip)+'</title></path>';
-    h+='<path class="e ah" data-a="'+a.id+'" data-b="'+b+'" d="M'+(x2-5)+' '+(y2-9)+' L'+x2+' '+y2+' L'+(x2+5)+' '+(y2-9)+' Z"/>';
+    if(!sade)h+='<path class="e ah" data-a="'+a.id+'" data-b="'+b+'" d="M'+(x2-5)+' '+(y2-9)+' L'+x2+' '+y2+' L'+(x2+5)+' '+(y2-9)+' Z"/>';
   })});
   h+="</svg>";
   N.forEach(x=>{
@@ -500,7 +592,10 @@ $("#panel").addEventListener("click",e=>{
   const c=e.target.closest(".chip");
   if(c){const i=+c.dataset.go;pick(i);const el=document.querySelector('.nd[data-i="'+i+'"]');if(el)el.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}
 });
-$("#q").oninput=view;$("#orph").onchange=view;
+/* Arama her tuşta tüm kutuları tarıyor: 2.000 dosyada yazarken takılıyordu → 120 ms gecikme. */
+let _vZaman=0;
+const _viewGecikmeli=()=>{clearTimeout(_vZaman);_vZaman=setTimeout(view,120)};
+$("#q").oninput=_viewGecikmeli;$("#orph").onchange=view;
 $("#zp").onclick=()=>{Z=Math.min(1.6,Z+.2);$("#cv").style.zoom=Z};
 $("#zm").onclick=()=>{Z=Math.max(.4,Z-.2);$("#cv").style.zoom=Z};
 $("#f1").onchange=e=>ingest(e.target.files);
@@ -788,6 +883,8 @@ function pngOlustur(){
 }
 function pngVeri(){const c=pngOlustur();return c.toDataURL("image/png")}
 function pngIndir(){
+  /* Yerleşim yalnız ÇİZİLEN kutular için hesaplanır; 2.500 üstünde PNG eksik çıkar. */
+  if(G.length>2500)return alert("PNG 2.500 kutuya kadar çizilir ("+G.length+" dosya var). Rol/bağ hesabı ve JSON · MD çıktısı tüm dosyaları kapsar.");
   const c=pngOlustur();
   const kaydet=(blob)=>{const u=URL.createObjectURL(blob);const a=document.createElement("a");
     a.href=u;a.download="proje-haritasi.png";document.body.appendChild(a);a.click();a.remove();

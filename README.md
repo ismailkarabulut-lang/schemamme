@@ -99,7 +99,27 @@ Terminal=false
 - Uzantı listesi sabittir; listede olmayan uzantı okunmaz — ama "ölçülmedi" diye etiketlenir, hüküm verilmez.
 - 4 MB üzeri dosyanın içeriği okunmaz (tarayıcı belleği); haritada görünür, bağı hesaplanmaz.
 - Yazı tipleri Google Fonts'tan gelir; internet yoksa yedek fontla çizilir (işlev bozulmaz).
-- Çok büyük projelerde (20.000+ dosya) süre uzar; sınır `docs` klasöründeki nota göre elle artırılır.
+- **Ölçek (18.11.2026, Chromium):** motor 200 dosyada 5 ms · 800'de 12 ms · 2.000'de 26 ms.
+  Çizim: 200 dosya ~0,1 sn · 800 ~0,4 sn · 2.000 ~1,2 sn. **Çizim sınırı 2.500 kutu** —
+  üstünde en çok bağlı 2.500 kutu çizilir ve üstte uyarı çıkar (rol/bağ hesabı, arama,
+  JSON · MD çıktısı tüm dosyaları kapsar). 5.000 dosya bu sınırla ~2,8 sn'de açılır;
+  sınırsız çizim 5 sn'yi aşıp tarayıcıyı kilitliyordu. 20.000 dosya **desteklenmiyor**.
+- Büyük haritada süs kapanır (giriş animasyonu, gölge, ok ucu) — 2.000 kutuda ölçülen
+  yavaşlık bunlardan geliyordu.
+- **Sır dosyaları** (`.env`, `*.key`, `secrets*`, `id_rsa`…): haritada görünür, metni
+  okunmaz, `localStorage`'a ve çıktılara yazılmaz. Kutu "okunmadı · sır" der.
+
+## Kendi testi
+
+```bash
+node test/kendi-test.js      # 7 test · 0 düşmeli · çıkış kodu 0
+```
+
+Testler uygulamanın JS gövdesini HTML'den çıkarıp sahte bir DOM'da çalıştırır; tarayıcı
+gerekmez. Kapsam: JS/TS importları (`import`, `export … from`, `require`), Python göreli
+import (`from . import x`), aynı adlı dosyada sıra bağımsızlığı, yorumdan bağ üretilmemesi,
+Kotlin uzantı alıcısının sembol tablosunu ele geçirmemesi, sır dosyasının okunmaması,
+bağsız dosyanın ayrı katmana düşmesi.
 
 ## Depo yapısı
 
@@ -109,6 +129,7 @@ main.js             ← Electron kabuğu (pencere açar, dış bağlantıları t
 baslat.sh           ← Electron varsa onu, yoksa tarayıcıyı açar
 jszip.min.js        ← zip okuyucu, yerel (JSZip 3.10.1, MIT)
 icon.png            ← simge
+test/kendi-test.js  ← motor testleri (node, tarayıcısız)
 docs/               ← akis.gif (akış animasyonu) · uygulama.gif (gerçek uygulama) · harita.png · akis.svg · kareler/
 ```
 
