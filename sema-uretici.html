@@ -7,12 +7,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;800;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <meta name="color-scheme" content="dark light">
 <style>
-:root{--bg:#03020a;--fg:rgba(255,255,255,.85);--mut:rgba(255,255,255,.38);--pan:rgba(255,255,255,.035);--bd:rgba(255,255,255,.075);--edge:rgba(255,255,255,.16);--hot:#E85D24;
+:root{--bg:#03020a;--yuzey:#0a0913;--fg:rgba(255,255,255,.85);--mut:rgba(255,255,255,.42);--pan:rgba(255,255,255,.045);--bd:rgba(255,255,255,.075);--edge:rgba(255,255,255,.16);--hot:#E85D24;
 --purple:#7C6EF5;--green:#1D9E75;--orange:#EF9F27;--red:#E85D24;--blue:#4FA8D5;--gold:#E8B86D;--teal:#2DD4BF;--pink:#C77DFF;
 --f1:'Rajdhani','DejaVu Sans',system-ui,sans-serif;--f2:'Orbitron','DejaVu Sans',system-ui,sans-serif;--fm:'JetBrains Mono','DejaVu Sans Mono',monospace;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f6fa;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}}
-:root[data-theme="light"]{--bg:#f6f6fa;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f6fa;--yuzey:#fff;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}}
+:root[data-theme="light"]{--bg:#f6f6fa;--yuzey:#fff;--fg:#16161f;--mut:#6a6a7a;--pan:#fff;--bd:#d3d3e0;--edge:#9a9ab0}
 *{box-sizing:border-box}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 html,body{height:100%;margin:0}
@@ -77,12 +77,12 @@ path.e.off{opacity:.08}
 /* ---- YAN ALAN (PiP değil): yuvalanmış, katlanır. Örtmez → harita alanı yeniden ölçeklenir.
    Katlı: 44 px şerit · Açık: 420 px. Üstte yazı çubuğu yok, krom yalnız şeritte. ---- */
 #govde{display:flex;flex:1;min-height:0;align-items:stretch;position:relative;z-index:1}
-#ray{flex:0 0 44px;display:flex;flex-direction:column;gap:6px;padding:8px 5px;border-right:1px solid var(--bd);background:rgba(10,10,18,.55)}
-#ray button{border:1px solid rgba(255,255,255,.12);background:none;color:rgba(255,255,255,.7);border-radius:8px;height:34px;font-size:15px;cursor:pointer;line-height:1}
-#ray button:hover{color:#fff;border-color:rgba(124,110,245,.55);background:rgba(124,110,245,.12)}
+#ray{flex:0 0 44px;display:flex;flex-direction:column;gap:6px;padding:8px 5px;border-right:1px solid var(--bd);background:var(--yuzey)}
+#ray button{border:1px solid var(--bd);background:none;color:var(--fg);border-radius:8px;height:34px;font-size:15px;cursor:pointer;line-height:1}
+#ray button:hover{border-color:var(--purple);background:rgba(124,110,245,.14)}
 #ozet{display:block}
 #kart{display:block}
-#panel{display:none;position:relative;flex:0 0 0px;width:0;max-height:none;overflow:auto;background:var(--pan);color:var(--fg);border-right:1px solid var(--bd);padding:0;box-shadow:none}
+#panel{display:none;position:relative;flex:0 0 0px;width:0;max-height:none;overflow:auto;background:var(--yuzey);color:var(--fg);border-right:1px solid var(--bd);padding:0;box-shadow:none}
 body.panelAcik #panel{display:block;flex:0 0 420px;width:420px;padding:14px 16px}
 #model{display:none;flex:1;overflow:auto;padding:16px 22px;font-family:var(--fm);font-size:12px;line-height:1.55;white-space:pre;color:var(--fg)}
 body.modeModel #wrap{display:none}
@@ -131,15 +131,13 @@ background:linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.012))
 <label class="btn" title="Klasör seç">Klasör<input id="f2" type="file" webkitdirectory hidden></label>
 <button class="btn" id="demo">Örnek</button>
 <button class="btn" id="gd" hidden title="Haritayı markdown olarak indir (SEMA-HARITASI.md)">📘 Harita (MD)</button>
-<button class="btn" id="png" hidden title="Haritanın resmini indir">🖼 PNG</button>
 <button class="btn" id="jdis" hidden title="Grafı JSON olarak indir (sema-graph.json)">💾 JSON</button>
 <label class="btn" id="jicL" hidden title="JSON'dan harita yükle">📥 JSON<input id="jic" type="file" accept=".json,application/json" hidden></label>
-<button class="btn ai" id="mv" hidden title="Modele verilecek özeti panoya kopyala">🧠 Modele</button>
 <input id="q" placeholder="ara…" aria-label="Ara">
 <label class="chk"><input type="checkbox" id="orph"> bağımsızlar</label>
 <button class="btn" id="zm" aria-label="Küçült">−</button><button class="btn" id="zp" aria-label="Büyüt">+</button>
 </div>
-<details class="legend"><summary>Nasıl okunur?</summary>Ok A → B demek “A, B’yi kullanıyor”. Üstteki kutu alttakini çağırır: en üst başlatıcılar, en alt temel parçalar. Kırmızı kesikli kutu hiçbir yere bağlı değil. Bir kutuya dokununca bağlantıları yanar ve altta sade bir açıklama açılır. <b>Düz ok</b> kesin bağdır (import ya da tanım). <b>Kesikli ok</b> tahmindir: yalnız dosya adı benzerliğinden çıkar, koda bakmadan güvenme. <b>Noktalı gri kutu</b> = dosyanın içeriği 4 MB üzeri olduğu için okunmadı; rolü ve bağları hesaplanmadı, "kullanılmıyor" demek değildir.</details></header>
+</header>
 <div id="govde">
 <aside id="panel">
 <div id="ozet"><section id="k4" hidden></section></div>
@@ -523,7 +521,7 @@ function draw(){
   });
   const cv=$("#cv");cv.style.width=Wt+"px";cv.style.height=y+"px";
   $("#empty").style.display="none";
-  $("#mv").hidden=false;$("#gd").hidden=false;
+  const _mv=$("#mv");if(_mv)_mv.hidden=false;const _gd=$("#gd");if(_gd)_gd.hidden=false;
   let h='<svg id="sv" width="'+Wt+'" height="'+y+'">';
   const katEtiket=(k,ilk,son)=>{const rl=new Set((lv[k]||[]).map(x=>roleOf(x).short));
     if(ilk&&rl.size===1&&rl.has("başlatıcı"))return " · başlatıcılar";
@@ -608,7 +606,7 @@ function pick(i){
   P.innerHTML='<button class="x" aria-label="Kapat">×</button><h2 style="color:'+col[x.group]+'">'+esc(x.name)+'</h2><div class="p">'+esc(x.path)+"</div>"
     +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
     +'<span class="tag">'+esc(x.ext||"dosya")+"</span>"+(x.lines?'<span class="tag">'+x.lines+" satır</span>":"")+(kb?'<span class="tag">'+kb+"</span>":"")+'<span class="tag">'+esc(x.group)+"</span>"+status+(girisRolu(x)?'<span class="tag">manifestte bildirilen giriş noktası</span>':"")
-    +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır</h3><span class="p">'+x.sembol.map(s=>esc(s.ad)+" ("+s.satir+")").join(", ")+"</span>":"")
+    +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır</h3><span class="p">'+x.sembol.slice(0,8).map(s=>esc(s.ad)+" ("+s.satir+")").join(", ")+(x.sembol.length>8?" … +"+(x.sembol.length-8)+" daha":"")+"</span>":"")
     +'<div class="nota"><h3>NOT <em>· bu dosya için · haritada kalır · JSON ve MD çıktısına girer</em></h3>'
     +'<textarea id="notaKutu" rows="2" placeholder="Modele ya da gelecekteki sana not: neden dokunulmaz, neyi bozar, ne yapılacak…">'+esc(x.not||"")+"</textarea></div>"
     +gorevTarifi(x)
@@ -775,12 +773,8 @@ function modelMetni(){
   });
   return O.join(NL);
 }
-$("#mv").onclick=async()=>{
-  if(!G.length)return alert("Önce bir klasör ya da dosya ekle.");
-  const t=modelMetni();
-  try{await navigator.clipboard.writeText(t);alert("Kopyalandı · "+t.length+" karakter · "+G.length+" dosya. Yeni sohbete yapıştır.")}
-  catch(e){prompt("Panoya yazılamadı, elle kopyala:",t)}
-};
+/* Eski "🧠 Modele" düğmesi kaldırıldı: model modu aynı metni ekranda gösteriyor ve
+   metin seçilebilir/kopyalanabilir. Panoya kopyalama tuşla: Ctrl/Cmd+C. */
 document.addEventListener("click",e=>{
   const lbl=e.target.closest("text.lbl");
   if(!lbl||heading)return;
