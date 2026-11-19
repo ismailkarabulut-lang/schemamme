@@ -799,7 +799,7 @@ function girisNoktalari(){
     if(hepsiZayif(x))p+=5;
     return p;
   };
-  return G.filter(x=>!x.okunmadi&&(manMi(x)||(x.out.size&&(!x.inn.size||hepsiZayif(x))))).slice().sort((a,b)=>puan(b)-puan(a));
+  return G.filter(x=>!x.okunmadi&&(manMi(x)||(x.out.size&&(!x.inn.size||hepsiZayif(x))))).slice().sort((a,b)=>puan(b)-puan(a)||String(a.path).localeCompare(String(b.path)));
 }
 function girisRolu(x){return manifestGirisleri().has((x.name||"").replace(/\.[^.]+$/,"").toLowerCase())}
 function roleOf(x){
@@ -861,7 +861,7 @@ function buildGuide(){
   const nm=s=>[...s].map(i=>G[i].name).join(", ")||"yok";
   const nmT=(s,from)=>[...s].map(i=>G[i].name+(GUVEN.get(from+"-"+i)==="ad"?" (ad)":"")).join(", ")||"yok";
   const E=N.reduce((s,x)=>s+x.out.size,0);
-  const top=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size>=2).slice(0,6);
+  const top=N.slice().sort((a,b)=>b.inn.size-a.inn.size||String(a.path).localeCompare(String(b.path))).filter(x=>x.inn.size>=2).slice(0,6);
   const ent=girisNoktalari().slice(0,5),orp=N.filter(x=>roleOf(x).short==="bağsız"),
         ayar=N.filter(x=>roleOf(x).short==="yapılandırma"),
         okuU=N.filter(x=>x.okunmadi&&x.nd==="uzanti"),okuI=N.filter(x=>x.okunmadi&&x.nd==="ikili"),
@@ -917,7 +917,7 @@ function kartGuncelle(){
     const yog=Object.entries(kl).sort((a,b)=>b[1]-a[1])[0]||["(kök)",0];
     const katman=Math.max(...N.map(x=>x.L))+1;
     /* KİMİNLE: en çok kullanılan dosyalar */
-    const kim=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size>0).slice(0,2);
+    const kim=N.slice().sort((a,b)=>b.inn.size-a.inn.size||String(a.path).localeCompare(String(b.path))).filter(x=>x.inn.size>0).slice(0,2);
     /* NEREYE: giriş noktaları — manifestte bildirilen öne, test dosyaları geriye */
     const giris=girisNoktalari().slice(0,2);
     k.innerHTML=
@@ -1202,7 +1202,10 @@ function modelYaz(){
   const p=_el("modelMetin");if(!p)return;
   if(!G.length){p.textContent="harita yok — bir klasör, zip ya da JSON yükle";return}
   const N=G, bag=N.reduce((s,x)=>s+x.out.size,0);
-  const riskli=N.slice().sort((a,b)=>b.inn.size-a.inn.size).filter(x=>x.inn.size).slice(0,3).map(x=>x.name+" "+x.inn.size).join(" · ")||"—";
+  /* Eşit bağ sayısında sıra GİRDİ SIRASINA bağlı kalmamalı: aksi hâlde aynı proje
+     iki farklı yolla iki farklı metin veriyordu (19.11 ölçümü: tarayıcı ≠ cli).
+     Eşitlikte yol alfabetik. */
+  const riskli=N.slice().sort((a,b)=>b.inn.size-a.inn.size||String(a.path).localeCompare(String(b.path))).filter(x=>x.inn.size).slice(0,3).map(x=>x.name+" "+x.inn.size).join(" · ")||"—";
   const giris=girisNoktalari().slice(0,2).map(x=>x.path).join(" · ")||"—";
   const okunmadi=N.filter(x=>x.okunmadi).length, bagsiz=N.filter(x=>!x.inn.size&&!x.out.size).length;
   const belirsiz=N.reduce((t,x)=>t+(x.belirsiz||0),0);
@@ -1226,7 +1229,7 @@ function modelYaz(){
   });
   L.push("");
   L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");
-  N.slice().sort((a,b)=>b.inn.size-a.inn.size).slice(0,10).forEach(x=>{
+  N.slice().sort((a,b)=>b.inn.size-a.inn.size||String(a.path).localeCompare(String(b.path))).slice(0,10).forEach(x=>{
     const oku=[...x.out].map(i=>G[i].name).slice(0,4).join(", ")||"—";
     L.push(yas(x.path,54)+" → "+oku);
   });

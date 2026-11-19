@@ -6,60 +6,12 @@
    Çalıştırma:  node test/kendi-test.js
    Çıkış kodu :  0 = hepsi geçti · 1 = en az bir test düştü
 */
-const fs = require("fs");
+/* İskele ortak: lib/sandbox.js — CLI (cli.js) ile AYNI kodu kullanır, ikinci kopya yok. */
 const path = require("path");
-const vm = require("vm");
+const { sandboxKur, sahteEl } = require("../lib/sandbox.js");
 
 const KOK = path.join(__dirname, "..");
-const HTML = fs.readFileSync(path.join(KOK, "sema-uretici.html"), "utf8");
-const GOVDE = [...HTML.matchAll(/<script>([\s\S]*?)<\/script>/g)]
-  .map((m) => m[1])
-  .sort((a, b) => b.length - a.length)[0];
-
-/* ---- sahte DOM: uygulama açılışta DOM'a dokunuyor, testte bu kadarı yetiyor ---- */
-function sahteEl() {
-  const e = {
-    style: {}, dataset: {}, hidden: false, textContent: "", innerHTML: "", value: "", checked: false,
-    offsetWidth: 800, offsetHeight: 600, clientHeight: 600, scrollHeight: 600, scrollTop: 0,
-    clientWidth: 800, scrollWidth: 800, offsetLeft: 0, offsetTop: 0, children: [], childNodes: [],
-    classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
-    addEventListener() {}, removeEventListener() {}, appendChild() {}, remove() {},
-    setAttribute() {}, getAttribute() { return null; }, focus() {}, scrollIntoView() {},
-    querySelector() { return sahteEl(); }, querySelectorAll() { return []; }, closest() { return null; },
-    getBoundingClientRect() { return { x: 0, y: 0, width: 0, height: 0 }; },
-    getContext() { return {}; }, toDataURL() { return "data:,"; },
-  };
-  e.parentElement = { clientWidth: 1120, clientHeight: 600, getBoundingClientRect() { return { x: 0, y: 0, width: 1120, height: 600 }; } };
-  return e;
-}
-const depo = {};
-const sandbox = {
-  console, setTimeout: (f) => (typeof f === "function" ? 0 : 0), clearTimeout() {},
-  performance: { now: () => Date.now() },
-  localStorage: {
-    getItem: (k) => (k in depo ? depo[k] : null),
-    setItem: (k, v) => { depo[k] = String(v); },
-    removeItem: (k) => { delete depo[k]; }, clear() { Object.keys(depo).forEach((k) => delete depo[k]); },
-  },
-  document: {
-    getElementById() { return sahteEl(); }, querySelector() { return sahteEl(); }, querySelectorAll() { return []; },
-    createElement() { return sahteEl(); }, body: sahteEl(), documentElement: sahteEl(),
-    addEventListener() {}, readyState: "complete",
-  },
-  Blob: class { constructor(a) { this.size = (a && a[0] && a[0].length) || 0; } },
-  URL: { createObjectURL: () => "blob:x", revokeObjectURL() {} },
-  FileReader: class { readAsText() {} },
-  alert() {}, navigator: { userAgent: "node" },
-  matchMedia: (q) => ({ matches: false, media: q, addEventListener() {}, removeEventListener() {}, addListener() {}, removeListener() {} }),
-  requestAnimationFrame: (f) => 0, cancelAnimationFrame() {},
-  addEventListener() {}, dispatchEvent() {},
-};
-sandbox.window = sandbox;
-sandbox.globalThis = sandbox;
-vm.createContext(sandbox);
-vm.runInContext(GOVDE, sandbox, { filename: "sema-uretici.html" });
-
-const calistir = (kod) => vm.runInContext(kod, sandbox);
+const { sandbox, calistir, HTML, GOVDE } = sandboxKur(path.join(KOK, "sema-uretici.html"));
 
 /* ---- yardımcı: dosya listesinden harita çıkar ---- */
 function harita(dosyalar) {
@@ -267,6 +219,29 @@ test("T14 model metni 'ne iş yapar' alanını taşır, olmayanda — yazar", ()
     throw new Error("özeti olmayan dosyada — yok · gelen: " + satir("db.py"));
   if (/Dosyada açıklama yazısı yok/.test(metin))
     throw new Error("yer tutucu metin modele sızdı (— olmalıydı)");
+});
+
+/* T15 — SIRA BAĞIMSIZLIĞI: aynı proje iki farklı girdi sırasıyla AYNI metni vermeli.
+   (19.11 ölçümü: "riskli" ve "ilk 10" satırlarında eşit bağ sayılı dosyalar girdi
+   sırasına göre değişiyordu — tarayıcı çıktısı ile cli.js çıktısı bu yüzden farklıydı.) */
+test("T15 model metni girdi sırasından bağımsız", () => {
+  const D = [
+    ["main.py", "import a\nimport b\nimport c\n"],
+    ["a.py", "x = 1\n"],
+    ["b.py", "y = 2\n"],
+    ["c.py", "z = 3\n"],
+    ["d.py", "q = 4\n"],
+    ["e.py", "r = 5\n"],
+    ["f.py", "s = 6\n"],
+  ];
+  const A = modelMetniAl(D);
+  const B = modelMetniAl(D.slice().reverse());
+  if (!A) throw new Error("model metni boş");
+  if (A !== B) {
+    const sa = A.split("\n"), sb = B.split("\n");
+    const i = sa.findIndex((s, k) => s !== sb[k]);
+    throw new Error("sıra değişince metin değişti · ilk fark satır " + (i + 1) + ": [" + sa[i] + "] ≠ [" + sb[i] + "]");
+  }
 });
 
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");

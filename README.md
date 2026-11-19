@@ -1,10 +1,10 @@
 # SCHEMAMME · Şema Üretici
 
-**Bir klasörü bırakıyorsun, kodun haritasını alıyorsun.** Yerel çalışır, dosyalar hiçbir yere gönderilmez.
+**Bir klasörü veriyorsun, kodun haritasını alıyorsun.** Yerel çalışır, dosyalar hiçbir yere gönderilmez.
 
 ![Akış](docs/akis.gif)
 
-Ekranda olan biten — gerçek uygulama, gerçek bir Kotlin projesi (Theia-Spring, 53 dosya):
+Ekranda olan biten — gerçek uygulama, gerçek bir Kotlin projesi:
 
 ![Uygulama](docs/uygulama.gif)
 
@@ -12,10 +12,10 @@ Ekranda olan biten — gerçek uygulama, gerçek bir Kotlin projesi (Theia-Sprin
 
 ## Neden var
 
-Bir projeye dışarıdan bakınca ilk sorular şunlar oluyor: *hangi dosya neyi çağırıyor, hangisine dokunmak riskli, hangisi kimse tarafından kullanılmıyor?* Bu soruların cevabı genelde kafada tutuluyor ve yanlış hatırlanıyor. Şema Üretici bunu **ölçüyor**:
+Bir projeye dışarıdan bakınca ilk sorular şunlar oluyor: *hangi dosya neyi çağırıyor, hangisine dokunmak riskli, hangisi kimse tarafından kullanılmıyor?* Bu sorular genelde kafada tutuluyor ve yanlış hatırlanıyor. Şema Üretici bunu **ölçüyor**:
 
 - Her dosya bir **kutu**; kutu **rengi** dosyanın rolünü, kutu **hacmi** satır sayısını gösterir.
-- Dosyalar arası **bağ** iki sınıfa ayrılır: `kesin` (import / tanım yolu) ve `tahmin` (yalnız dosya adı benzerliği). Tahmin bağları **kesikli** çizilir.
+- Dosyalar arası **bağ** üç sınıfa ayrılır — güven sırasıyla: `import` (yol eşleşmesi) · `ad` (ad kodda geçiyor, tanım tek dosyada) · `kaynak` (dosya adı metin sabitinde). Zayıf sınıflar **kesikli** çizilir.
 - Katmanlar çağrı zincirinden hesaplanır: en üstte giriş noktaları, en altta ortak temel parçalar.
 - Bir kutuya tıklayınca **panel** açılır: rolü, riski, çağırdıkları, onu çağıranlar, içindeki fonksiyon/sınıflar **satır numarasıyla**, ve modele verilecek hazır **görev tarifi**.
 
@@ -26,54 +26,58 @@ Bir projeye dışarıdan bakınca ilk sorular şunlar oluyor: *hangi dosya neyi 
 | **başlatıcı** | Kimse onu çağırmıyor, o başkalarını çağırıyor (veya manifestte bildirilen giriş) | orta |
 | **aracı** | Hem çağrılıyor hem çağırıyor — zincirin orta halkası | bağ sayısına göre |
 | **temel parça** | Kimseyi çağırmıyor ama herkes onu kullanıyor (veri, tema, ortak yardımcı) | 3+ çağıran = yüksek |
-| **bağımsız** | Hiçbir bağı yok — tek başına araç ya da eski dosya olabilir | düşük |
-| **yapılandırma** | Derleme/bağımlılık/ayar tanımı (`kts`, `gradle`, `xml`, `properties`…). Kod bağı kurmaz, **"kullanılmıyor" hükmü verilmez** | orta |
-| **okunmadı** | Uzantı okunmuyor · 4 MB üzeri · ikili içerik. Rol ve bağ **hesaplanmaz** | ölçülmedi |
+| **bölüm** | Kendi sınıfı yok; başka bir sınıfı genişleten fonksiyonlar tanımlıyor | orta |
+| **test** | Test dosyası; çağrılmaması normaldir, giriş noktası değildir | düşük |
+| **bağsız** | Bu haritada bağ bulunamadı — **"kullanılmıyor" hükmü değil** | düşük |
+| **yapılandırma** | Derleme/bağımlılık/ayar tanımı. Kod bağı kurmaz, **"kullanılmıyor" hükmü verilmez** | orta |
+| **belge** | Kod dosyası değil; kod bağı ve risk hükmü verilmez | — |
+| **okunmadı** | Uzantı okunmuyor · 4 MB üzeri · ikili içerik · sır dosyası. Rol ve bağ **hesaplanmaz** | ölçülmedi |
 
 Bu ayrım keyfi değil: **veri yokluğu hüküm değildir.** Okunamayan bir dosya "bağımsız" diye yazılsaydı, haritayı okuyan model onu silinebilir sanırdı.
 
 ## Çıktılar
 
-| Düğme | Ne üretir | Ne işe yarar |
+| Yer | Ne üretir | Ne işe yarar |
 |---|---|---|
-| 📘 **Harita (MD)** | `SEMA-HARITASI.md` | Modele verilecek belge: özet, katmanlar, sembol dizini (ad → dosya:satır), dosya kartları |
-| 💾 **JSON** | `sema-graph.json` (şema sürüm 2) | Başka araçlar için: `dosya[]` (yol, satır, rol, risk, katman, sembol) + `kenar[]` (a, b, tip) |
-| 🖼 **PNG** | `proje-haritasi.png` | Haritanın resmi — bağımlılık yok, harici kütüphane yok, canvas ile çizilir |
-| 🧠 **Modele** | pano | Katman listesi + roller, tek yapıştırmada |
+| 🧠 **Model modu** (`m` tuşu) | ekranda metin | Modele verilecek metin: künye, dosya tablosu (rol · satır · bağ sayıları · risk · durum · *ne iş yapar*), okuma sırası |
+| 📘 **Harita (MD)** | `SEMA-HARITASI.md` | İnsan için uzun belge: katmanlar, sembol dizini (ad → dosya:satır), dosya kartları |
+| 💾 **JSON** | `sema-graph.json` | Başka araçlar için: `dosya[]` + `kenar[]` |
+| 🖼 **PNG** | `proje-haritasi.png` | Haritanın resmi — harici kütüphane yok, canvas ile çizilir |
 
-`SEMA-HARITASI.md` özet bölümü beş sınıfı ayrı sayar: giriş noktaları · riskli dosyalar · bağımsızlar · yapılandırma · okunmayanlar.
+**Harita diske yazılmaz, arşivlenmez.** Her oturumda kaynaktan yeniden üretilir: kaydedilmiş harita bayat bilgidir ve yeni bir model onu "güncel" sanıp hatayı katlar.
+
+## Başsız kullanım (tarayıcısız)
+
+Aynı motor, terminalden — modelin kendisi tarayıcı açmadan harita üretebilsin diye:
+
+```bash
+node cli.js <klasör>            # model metni (stdout)
+node cli.js <klasör> --md       # SEMA-HARITASI.md içeriği
+node cli.js <klasör> --json     # sema-graph.json içeriği
+node cli.js <klasör> --sessiz   # yalnız künye satırı
+```
+
+Motor tektir: `cli.js` ve testler `sema-uretici.html` içindeki gövdeyi `lib/sandbox.js`
+üzerinden çalıştırır. Okuma kapısı da uygulamanın kendisinden gelir (sır · okunabilir uzantı · boyut · ikili) — ikinci bir uygulama yok, iki farklı cevap çıkmaz.
 
 ## Girdi biçimleri
 
-- **Klasör** — sürükle-bırak ya da *Klasör* düğmesi (özyinelemeli okuma, `node_modules` / `.git` / `build` atlanır)
+- **Klasör** — sürükle-bırak, *Klasör* düğmesi ya da `cli.js`
 - **Dosyalar** — çoklu seçim veya sürükleme
 - **Zip** — arşiv içinden harita (zip okuyucu **yereldir**, internet gerekmez)
 - **Tek not dosyası** (`.md` / `.txt`) — dosya değil **başlık** haritası çıkar: üst başlık → alt başlık
 
 Atlananlar: `node_modules` · `.git` · `__pycache__` · `.venv` · `build` · `dist` · `.gradle` · `.idea` · `gradlew`/`mvnw` · resim/ses/video/apk/jar/zip.
 
-## Ölçülen sonuç (16.11.2026)
-
-Theia-Spring (Android/Kotlin) klasörü:
-
-```
-53 kutu · 59 bağ · 7 katman · çakışan kutu çifti 0
-roller: yapılandırma 21 · aracı 18 · temel parça 6 · bağımsız 3 · belge 2 · okunmadı 2 · başlatıcı 1
-en çok çağrılan: Color.kt (13) · TheiaViewModel.kt (11) · Models.kt (7)
-giriş noktası: MainActivity.kt (manifestte bildirilen)
-çıktılar: SEMA-HARITASI.md 74 KB · sema-graph.json 25 KB · proje-haritasi.png 2240×3498
-```
-
-![Harita](docs/harita.png)
-
 ## Çalıştırma
 
 ```bash
 ./baslat.sh                     # Electron varsa kendi penceresinde, yoksa tarayıcıda
 xdg-open sema-uretici.html      # tek dosya, sunucu gerekmez
+node cli.js <klasör>            # tarayıcısız (modele doğrudan metin)
 ```
 
-Gereken: bir Chromium tabanlı tarayıcı (Chrome/Chromium/Electron). Electron isteğe bağlı — yoksa tarayıcıda açılır. **Sunucu yok, kurulum yok, hesap yok.**
+Gereken: bir Chromium tabanlı tarayıcı (Chrome/Chromium/Electron). Electron isteğe bağlı — yoksa tarayıcıda açılır. **Sunucu yok, hesap yok.**
 
 Masaüstü kısayolu:
 
@@ -87,74 +91,54 @@ Terminal=false
 
 ## Nasıl çalışıyor (kısa)
 
-1. **Okuma** — her dosya metin olarak okunur; okunmayan üç durum ayrı etiketlenir (uzantı / 4 MB / ikili bayt).
-2. **Rol ve bağ** — Python/JS `import` ve `from` satırları, Kotlin `import` + proje paketi eşleşmesi, `class/object/fun` tanımları; ek olarak dosya adı benzerliği (`tahmin`).
-3. **Katman** — kenar grafiğinde en uzun yol; döngü varsa kırılır.
-4. **Yerleşim** — katman başına satır, kutu genişliği ada göre, çakışma yok.
-5. **Kalıcılık** — son harita `localStorage`'a yazılır; sayfa açılınca geri gelir (kota dolarsa görünür uyarı verir, sessizce kaybolmaz).
+1. **Okuma** — her dosya metin olarak okunur; okunmayan dört durum ayrı etiketlenir (sır / uzantı / 4 MB / ikili bayt).
+2. **Rol ve bağ** — Python `import` · `from … import`, JS/TS `import … from` · `export … from` · `require` · `import()`, Kotlin `import` + proje paketi eşleşmesi, `class/object/fun` tanımları, metin sabitindeki dosya adı. Çözülemeyen import **bağ kurmaz**, `belirsiz` sayılır.
+3. **Katman** — kenar grafiğinde en uzun yol; döngü kırılır.
+4. **Yerleşim** — katman başına satır, çakışma yok; sınır `LIMIT` (2.500 kutu), üstünde en çok bağlı olanlar çizilir ve uyarı çıkar (hesap, arama, JSON · MD tüm dosyaları kapsar).
+5. **Kalıcılık yok** — harita saklanmaz; notlar yalnız sekme ömrü boyunca (`sessionStorage`) durur. Kalıcı bir şey isteniyorsa JSON çıktısı elle indirilir.
+
+## Dürüstlük kuralları
+
+- Her haritanın başında **KABA (ön izleme — kesin değil)** yazar. Harita yön verir, **kod karar verir**.
+- `bağ yok` = bu haritada bulunamadı; "kullanılmıyor" hükmü değil.
+- `belirsiz` = import yazılmış ama hedefi çözülememiş (göreli yol haritada yok, iki aday var, alias çözülmüyor).
+- `—` = ölçüm yok/boş. Model metnindeki *ne iş yapar* sütunu dosyanın **kendi** başlık yorumundan alıntıdır; yoksa `—` yazar, tahmin edilmez.
+- **Sır dosyaları** (`.env`, `*.pem`, `id_rsa`, `secrets*`…): haritada görünür, metni okunmaz, hiçbir çıktıya yazılmaz.
 
 ## Bilinen sınırlar
 
 - Bağlar **tahmindir**: dinamik çağrılar (`getattr`, reflection, string ile yükleme) görülmez.
-- Uzantı listesi sabittir; listede olmayan uzantı okunmaz — ama "ölçülmedi" diye etiketlenir, hüküm verilmez.
+- Uzantı listesi sabittir; listede olmayan uzantı okunmaz — "ölçülmedi" diye etiketlenir, hüküm verilmez.
 - 4 MB üzeri dosyanın içeriği okunmaz (tarayıcı belleği); haritada görünür, bağı hesaplanmaz.
+- Çizim sınırı 2.500 kutu; üstünde hesap tam, çizim kısmi. Süs (animasyon/gölge/ok ucu) büyük haritada kapanır.
 - Yazı tipleri Google Fonts'tan gelir; internet yoksa yedek fontla çizilir (işlev bozulmaz).
-- **Ölçek (18.11.2026, Chromium):** motor 200 dosyada 5 ms · 800'de 12 ms · 2.000'de 26 ms.
-  Çizim: 200 dosya ~0,1 sn · 800 ~0,4 sn · 2.000 ~1,2 sn. **Çizim sınırı 2.500 kutu** —
-  üstünde en çok bağlı 2.500 kutu çizilir ve üstte uyarı çıkar (rol/bağ hesabı, arama,
-  JSON · MD çıktısı tüm dosyaları kapsar). 5.000 dosya bu sınırla ~2,8 sn'de açılır;
-  sınırsız çizim 5 sn'yi aşıp tarayıcıyı kilitliyordu. 20.000 dosya **desteklenmiyor**.
-- Büyük haritada süs kapanır (giriş animasyonu, gölge, ok ucu) — 2.000 kutuda ölçülen
-  yavaşlık bunlardan geliyordu.
-- **Sır dosyaları** (`.env`, `*.key`, `secrets*`, `id_rsa`…): haritada görünür, metni
-  okunmaz, `localStorage`'a ve çıktılara yazılmaz. Kutu "okunmadı · sır" der.
-
-## Model döngüsü (notlar)
-
-Harita iki yönlü: her dosyanın serbest metin **notu** var. Panelde yazılır, **dosya yoluna**
-bağlı saklanır (sayfa kapanınca ya da klasör yeniden taranınca kaybolmaz), JSON'da `not`
-alanı olarak taşınır, MD çıktısında `- Not:` satırı olarak görünür, notu olan kutu ✎ ile
-işaretlenir.
-
-Modelin ürettiği açıklamayı haritaya geri yazmak için:
-
-```bash
-# 1) uygulamada "JSON indir" → sema-graph.json
-# 2) model çıktısı: JSON ({"yol":"not"} · {"notlar":{…}} · [{"yol","not"}] · harita biçimi)
-#    ya da MD ("### yol" başlığı altında "- Not: …")
-python3 not-birlestir.py --harita sema-graph.json --gelen model-cikti.md   # yerinde günceller, .yedek alır
-python3 not-birlestir.py --harita … --gelen … --kuru                      # yazmadan yalnız rapor
-python3 not-birlestir.py --kendini-test                                   # 12 test
-```
-
-Kural: **elle yazılmış not ezilmez** — boş alan doldurulur, aynı not iki kez yazılmaz,
-haritada olmayan yol dosya uydurmaz. Rapor dört sayaç basar: eklendi · korundu (elle) ·
-zaten vardı · haritada yok. Birleşmiş JSON'u uygulamada açınca notlar panelde ve haritada
-görünür.
 
 ## Kendi testi
 
 ```bash
-node test/kendi-test.js      # 7 test · 0 düşmeli · çıkış kodu 0
+node test/kendi-test.js      # hepsi geçmeli · çıkış kodu 0
 ```
 
 Testler uygulamanın JS gövdesini HTML'den çıkarıp sahte bir DOM'da çalıştırır; tarayıcı
-gerekmez. Kapsam: JS/TS importları (`import`, `export … from`, `require`), Python göreli
-import (`from . import x`), aynı adlı dosyada sıra bağımsızlığı, yorumdan bağ üretilmemesi,
-Kotlin uzantı alıcısının sembol tablosunu ele geçirmemesi, sır dosyasının okunmaması,
-bağsız dosyanın ayrı katmana düşmesi.
+gerekmez. Kapsam: JS/TS importları, Python göreli import, aynı adlı dosyada sıra
+bağımsızlığı, yorumdan bağ üretilmemesi, Kotlin uzantı alıcısının sembol tablosunu ele
+geçirmemesi, sır dosyasının okunmaması, bağsız dosyanın ayrı katmana düşmesi, not
+döngüsü, alias/belirsizlik, çok satırlı import, tırnak içi dosya adı bağı, model metninin
+*ne iş yapar* alanı.
 
 ## Depo yapısı
 
 ```
-sema-uretici.html   ← uygulamanın tamamı (tek dosya, ~60 KB)
-main.js             ← Electron kabuğu (pencere açar, dış bağlantıları tarayıcıya devreder)
-baslat.sh           ← Electron varsa onu, yoksa tarayıcıyı açar
-jszip.min.js        ← zip okuyucu, yerel (JSZip 3.10.1, MIT)
-not-birlestir.py    ← modelin notlarını harita JSON'una birleştirir (kendi testi var)
-icon.png            ← simge
-test/kendi-test.js  ← motor testleri (node, tarayıcısız)
-docs/               ← akis.gif (akış animasyonu) · uygulama.gif (gerçek uygulama) · harita.png · akis.svg · kareler/
+sema-uretici.html       ← uygulamanın tamamı (tek dosya)
+cli.js                  ← başsız giriş: tarayıcısız model metni / MD / JSON
+lib/sandbox.js          ← ortak iskele (HTML gövdesini sahte DOM'da çalıştırır)
+main.js                 ← Electron kabuğu (pencere açar, dış bağlantıları tarayıcıya devreder)
+baslat.sh               ← Electron varsa onu, yoksa tarayıcıyı açar
+jszip.min.js            ← zip okuyucu, yerel (JSZip 3.10.1, MIT)
+not-birlestir.py        ← modelin notlarını harita JSON'una birleştirir (kendi testi var)
+icon.png                ← simge
+test/kendi-test.js      ← motor testleri (node, tarayıcısız)
+docs/                   ← akis.gif · uygulama.gif · harita.png · akis.svg · kareler/
 ```
 
 ## Lisans
