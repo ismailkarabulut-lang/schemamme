@@ -15,12 +15,13 @@ const { sandboxKur } = require("./lib/sandbox.js");
 
 const KOK_DIZIN = path.join(__dirname);
 const YARDIM = `Şema Üretici · başsız kullanım
-  node cli.js <klasör> [--md | --json | --sessiz] [--sinir N]
+  sema <klasör> [--md | --json | --sessiz] [--sinir N]
+  (aynısı: node cli.js <klasör> …)
 
   <klasör>     taranacak proje klasörü (mutlak ya da göreli yol)
   --md         SEMA-HARITASI.md içeriğini basar
   --json       sema-graph.json içeriğini basar
-  --sessiz     yalnız "N dosya · M bağ · K özet" satırı
+  --sessiz     yalnız künye satırı ("# kök · N dosya · M bağ · damga · KABA")
   --sinir N    çıktıyı N karakterde kes (varsayılan: sınırsız)
 
 Çıkış kodu: 0 başarılı · 1 kullanım hatası · 2 okunacak dosya yok`;

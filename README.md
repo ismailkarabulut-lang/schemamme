@@ -51,10 +51,11 @@ Bu ayrım keyfi değil: **veri yokluğu hüküm değildir.** Okunamayan bir dosy
 Aynı motor, terminalden — modelin kendisi tarayıcı açmadan harita üretebilsin diye:
 
 ```bash
-node cli.js <klasör>            # model metni (stdout)
-node cli.js <klasör> --md       # SEMA-HARITASI.md içeriği
-node cli.js <klasör> --json     # sema-graph.json içeriği
-node cli.js <klasör> --sessiz   # yalnız künye satırı
+sema <klasör>                   # model metni (stdout) — tarayıcısız kısayol
+sema <klasör> --md              # SEMA-HARITASI.md içeriği
+sema <klasör> --json            # sema-graph.json içeriği
+sema <klasör> --sessiz          # yalnız künye satırı
+node cli.js <klasör>            # aynısı, kısayol kurulmadan
 ```
 
 Motor tektir: `cli.js` ve testler `sema-uretici.html` içindeki gövdeyi `lib/sandbox.js`
@@ -132,6 +133,7 @@ döngüsü, alias/belirsizlik, çok satırlı import, tırnak içi dosya adı ba
 ```
 sema-uretici.html       ← uygulamanın tamamı (tek dosya)
 cli.js                  ← başsız giriş: tarayıcısız model metni / MD / JSON
+sema                    ← kısayol betiği (~/.local/bin/sema → buraya bağlanır)
 lib/sandbox.js          ← ortak iskele (HTML gövdesini sahte DOM'da çalıştırır)
 main.js                 ← Electron kabuğu (pencere açar, dış bağlantıları tarayıcıya devreder)
 baslat.sh               ← Electron varsa onu, yoksa tarayıcıyı açar

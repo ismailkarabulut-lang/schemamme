@@ -1,0 +1,6 @@
+#!/bin/sh
+# sema — Şema Üretici'nin başsız (tarayıcısız) kısayolu.
+# Kullanım: sema <klasör> [--md|--json|--sessiz] [--sinir N]
+# Motor: bu klasördeki sema-uretici.html. Başka kopya yok.
+DIZIN=$(dirname "$(readlink -f "$0")")
+exec node "$DIZIN/cli.js" "$@"
