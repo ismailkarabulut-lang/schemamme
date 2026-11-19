@@ -1068,9 +1068,13 @@ const ANAHTAR="semaSonHarita";
    Not DOSYA YOLUNA bağlı tutulur, harita ömrüne değil: klasör silinip yeniden taransa,
    sayfa kapansa da not yerinde kalır. Dışa aktarımda `not` alanı olarak taşınır. */
 const NOT_ANAHTAR="semaNotlar";
+/* NOTLAR DA OTURUMLUK (Kaptan 19.11): proje hakkında yazılan not, diske kalan bayat bilgidir.
+   sessionStorage kullanılır — sekme kapanınca not da gider; yanlış hatırlama imkânı kalmaz.
+   Kalıcı saklamak istersen JSON çıktısını dosya olarak indir. */
+const NOT_DEPO=(()=>{try{return window.sessionStorage||window.localStorage}catch(e){return null}})();
 let NOTLAR={};
-try{NOTLAR=JSON.parse(localStorage.getItem(NOT_ANAHTAR)||"{}")||{}}catch(e){NOTLAR={}}
-function notKaydet(){try{localStorage.setItem(NOT_ANAHTAR,JSON.stringify(NOTLAR))}catch(e){uyar("↺ Notlar kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur")}}
+try{NOTLAR=JSON.parse((NOT_DEPO&&NOT_DEPO.getItem(NOT_ANAHTAR))||"{}")||{}}catch(e){NOTLAR={}}
+function notKaydet(){try{NOT_DEPO&&NOT_DEPO.setItem(NOT_ANAHTAR,JSON.stringify(NOTLAR))}catch(e){uyar("↺ Notlar kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur")}}
 function notVer(yol){return NOTLAR[yol]||""}
 function notYaz(yol,metin){const t=String(metin==null?"":metin).trim();if(t)NOTLAR[yol]=t;else delete NOTLAR[yol];notKaydet()}
 function kaydet(E){
