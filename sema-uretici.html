@@ -1074,10 +1074,10 @@ function notKaydet(){try{localStorage.setItem(NOT_ANAHTAR,JSON.stringify(NOTLAR)
 function notVer(yol){return NOTLAR[yol]||""}
 function notYaz(yol,metin){const t=String(metin==null?"":metin).trim();if(t)NOTLAR[yol]=t;else delete NOTLAR[yol];notKaydet()}
 function kaydet(E){
-  const b=document.getElementById("geriBilgi");
-  try{localStorage.setItem(ANAHTAR,JSON.stringify({t:Date.now(),D:E.map(d=>({path:d.path,size:d.size,text:sirMi(d.path)?null:(d.text||null)}))}));
-    if(b&&b.textContent.indexOf("Son harita kaydedilemedi")>=0){b.hidden=true;b.textContent=""}
-  }catch(e){if(b){b.hidden=false;b.textContent="↺ Son harita kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur"}}}
+  /* HARİTA SAKLANMAZ (Kaptan 19.11). Eskiden bütün dosya metinleri "semaSonHarita" anahtarına
+     yazılıyordu: diske kaydedilmiş tam bir kopya = bayat bilgi. Yeni oturumda eski harita
+     "güncel" sanılıp hata katlanıyordu. Artık yalnız NOTLAR saklanır (yol→not, insan yazısı). */
+}
 function indir(ad,metin,tip){
   const blob=new Blob([metin],{type:tip||"text/plain;charset=utf-8"});
   const u=URL.createObjectURL(blob),a=document.createElement("a");
@@ -1221,8 +1221,8 @@ addEventListener("keydown",e=>{
   if(e.key==="Escape"&&MOD==="insan")closeP();
 });
 
-/* Son harita KENDİLİĞİNDEN geri yüklenmez (Kaptan 19.11): dünkü harita bugün "güncel" sanılıyordu.
-   Dosya metinleri yine de saklanıyor (ANAHTAR) — ama kullanıcı açıkça istemeden ekrana gelmez.
-   Notlar ayrı anahtarda (semaNotlar) ve dosya yoluna bağlı; harita yüklenmese de dururlar. */
+/* HARİTA HİÇ SAKLANMAZ (Kaptan 19.11): ne geri yüklenir, ne diske yazılır. Kaydedilmiş harita
+   bayat bilgidir; yeni oturumda "güncel" sanılıp hatayı katlar. Her oturumda kaynaktan yeniden
+   üretilir. Yalnız NOTLAR (semaNotlar) saklanır — onlar insan yazısı, dosya yoluna bağlı. */
 
 </script></body></html>
