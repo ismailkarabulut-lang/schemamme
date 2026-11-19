@@ -1325,18 +1325,6 @@ function calistirKomutu(){
 }
 /* Model modu metni: her satır TEK alan. Ölçüm (yol, satır, sembol) işaretsiz; yorum alanları sonda.
    Kaynak her zaman yazılır: bu motor KABA'dır (regex ön izleme) — "kesin" demez. */
-/* TAZE: son 24 saatte değişen dosyalar (yalnız başsız modda — mtime'ı cli.js geçirir).
-   Tarayıcıda __MTIME yok → satır hiç yazılmaz, uydurulmaz. */
-function tazeMetni(){
-  try{
-    if(typeof __MTIME==="undefined"||!__MTIME)return "";
-    const sinir=Date.now()-24*3600*1000, y=[];
-    (G||[]).forEach(x=>{const m=__MTIME[x.path];if(m&&m>sinir)y.push(x.path)});
-    if(!y.length)return "";
-    y.sort();
-    return y.length+" dosya son 24 saatte: "+y.slice(0,6).join(" · ")+(y.length>6?" … +"+(y.length-6):"");
-  }catch(e){return ""}
-}
 function modelYaz(){
   const p=_el("modelMetin");if(!p)return;
   if(!G.length){p.textContent="harita yok — bir klasör, zip ya da JSON yükle";return}
@@ -1361,8 +1349,6 @@ function modelYaz(){
   const bagyok=N.filter(x=>bagDurum(x)==="bağ yok").length;
   L.push("durum   okunmadı "+okunmadi+" · kapsam dışı "+kapsam+" · bağ yok "+bagyok+" · belirsiz "+belirsiz
     +TEHLIKE_SIRA.filter(t=>teh[t]).map(t=>" · "+t+" "+teh[t]).join(""));
-  const taze=tazeMetni();
-  if(taze)L.push("taze    "+taze);
   L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0]))).map(([k,v])=>k+" "+v).join(" · "));
   L.push("");
   L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
