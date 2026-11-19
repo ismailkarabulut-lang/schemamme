@@ -74,6 +74,20 @@ path.e.est{opacity:.35;animation:eIn .9s ease both}
 path.e.kaynak{stroke:#E8B86D;opacity:.45;animation:eIn .9s ease both}
 path.e.on{stroke:var(--purple);stroke-width:2.4;opacity:1;filter:drop-shadow(0 0 7px var(--purple))}
 path.e.off{opacity:.08}
+/* ERİŞİM DÜĞMELERİ + KAYNAK KARTI (Kaptan 19.11) */
+.odak{display:flex;gap:6px;margin:10px 0 4px;flex-wrap:wrap}
+.obtn{font-family:var(--fm);font-size:11px;padding:5px 9px;border-radius:8px;border:1px solid var(--bd);background:transparent;color:var(--mut);cursor:pointer}
+.obtn:hover{border-color:var(--purple);color:var(--fg)}
+.obtn.secili{border-color:var(--purple);color:var(--fg);box-shadow:0 0 0 1px var(--purple);opacity:1}
+.semb{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 6px}
+.sbtn{font-family:var(--fm);font-size:10.5px;padding:3px 7px;border-radius:7px;border:1px solid var(--bd);background:transparent;color:var(--fg);cursor:pointer}
+.sbtn i{font-style:normal;color:var(--mut);margin-left:5px}
+.sbtn:hover{border-color:var(--purple)}
+.sbtn.secili{border-color:var(--purple);box-shadow:0 0 0 1px var(--purple)}
+pre.kod{max-height:240px;overflow:auto;background:#0b0d14;border:1px solid var(--bd);border-radius:8px;padding:8px 10px;font-family:var(--fm);font-size:10.5px;line-height:1.55;color:#c9d1e4;margin:4px 0 0;white-space:pre;tab-size:2}
+pre.kod .satir{display:block;border-radius:3px}
+pre.kod .satir.vurgu{background:#243049}
+pre.kod .sno{display:inline-block;width:32px;color:#5a6178;text-align:right;margin-right:9px;user-select:none}
 /* ---- YAN ALAN (PiP değil): yuvalanmış, katlanır. Örtmez → harita alanı yeniden ölçeklenir.
    Katlı: 44 px şerit · Açık: 420 px. Üstte yazı çubuğu yok, krom yalnız şeritte. ---- */
 #govde{display:flex;flex:1;min-height:0;align-items:stretch;position:relative;z-index:1}
@@ -187,7 +201,7 @@ const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9
 function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map(),KOK_AD="";
+let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map(),KOK_AD="",odakYon="";
 
 /* Bir dosyanın metni okunacak mı: üç engel var — okunmayan uzantı, boyut, ikili içerik.
    Üçü de "ölçülmedi" demektir; hiçbiri "kullanılmıyor" hükmü üretmez. */
@@ -264,13 +278,23 @@ function summ(t,ext){
 /* Tanım adı + SATIR NUMARASI: model dosyayı açmadan doğru satıra atlayabilsin. */
 function semboller(t){
   if(!t)return[];
-  const re=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:async\s+)?(?:def|class|function|fun)\s+([A-Za-z_]\w*)|^\s*(?:val|var|const|let)\s+([A-Za-z_]\w*)/;
-  const r=[];
+  /* SIRA ÖNEMLİ (19.11): önce fonksiyon/sınıf, sonra değişken. Önceki tek regex
+     metin sırasına uyuyordu; dosya başındaki const'lar (DEFAULT, cv, R…) ilk 8 yuvayı
+     doldurup fonksiyonları "… +32" içine itiyordu (ölçüm: harita3d.html 21 fonksiyon,
+     listede 0). Modelin aradığı ad fonksiyondur; değişken adı sonradan gelir. */
+  /* 'export function' / 'export default class' / 'public static fun' önekleri de sayılır:
+     ölçüm (19.11): export ile yazılmış JS/TS dosyalarında sembol listesi BOŞ kalıyordu. */
+  const fnRe=/^\s*(?:@\w+(?:\([^)]*\))?\s*)*(?:export\s+(?:default\s+)?)?(?:(?:public|private|protected|internal|static|final|open|abstract|sealed|data|inline|suspend|async|declare|override)\s+)*(?:def|class|function|fun|interface|enum|struct)\s+([A-Za-z_]\w*)/;
+  const vrRe=/^\s*(?:val|var|const|let)\s+([A-Za-z_]\w*)/;
+  const fonk=[],deg=[];
+  const varMi=ad=>fonk.some(x=>x.ad===ad)||deg.some(x=>x.ad===ad);
   t.split("\n").forEach((satir,i)=>{
-    const m=re.exec(satir);
-    if(m&&r.length<40){const ad=m[1]||m[2];if(!r.some(x=>x.ad===ad))r.push({ad,satir:i+1})}
+    const f=fnRe.exec(satir);
+    if(f){if(!varMi(f[1]))fonk.push({ad:f[1],satir:i+1});return}
+    const v=vrRe.exec(satir);
+    if(v&&!varMi(v[1]))deg.push({ad:v[1],satir:i+1});
   });
-  return r;
+  return fonk.concat(deg).slice(0,40);
 }
 function defs(t){
   if(!t)return[];const r=[];let m;
@@ -635,13 +659,37 @@ function draw(){
   SON_W=Wt;SON_H=y;sigdir();
   view();
 }
+/* ERİŞİM KÜMESİ — seçili dosyadan bağları izleyerek ulaşılan TÜM dosyalar.
+   yon="asagi": çağırdıkları · yon="yukari": onu çağıranlar. Genişlik sınırı yok,
+   döngü korumalı (Set). Bağ sınıfı ayrımı yapmaz: zayıf bağ da zincire girer,
+   çünkü soru "neye dokunuyor", "kanıtı ne kadar güçlü" değil. */
+function erisim(baslangic,yon){
+  const kume=new Set([baslangic]),kuyruk=[baslangic];
+  while(kuyruk.length){
+    const a=G[kuyruk.shift()];if(!a)continue;
+    (yon==="yukari"?a.inn:a.out).forEach(b=>{if(!kume.has(b)&&G[b]){kume.add(b);kuyruk.push(b)}});
+  }
+  return kume;
+}
+/* KAYNAK KARTI — dosyanın gerçek satırları, numaralı. Sembole tıklayınca o satır çevresi.
+   Metin okunmadıysa (sır/ikili/4 MB+) kart açılmaz: içerik yok, uydurma yok. */
+function kodGoster(id,satir){
+  const x=G[id],pre=document.getElementById("kodKarti");
+  if(!x||!pre||!x.text)return;
+  const L=x.text.split("\n"),b=Math.max(1,satir-4),e=Math.min(L.length,satir+10);
+  let h="";
+  for(let i=b;i<=e;i++)h+='<span class="satir'+(i===satir?" vurgu":"")+'"><span class="sno">'+i+'</span>'+esc(L[i-1]||"")+"</span>";
+  pre.innerHTML=h;pre.hidden=false;
+  document.querySelectorAll("#panel .sbtn").forEach(b2=>b2.classList.toggle("secili",+b2.dataset.satir===satir));
+}
 function view(){
   const q=$("#q").value.trim().toLowerCase(),o=$("#orph").checked;
+  const kume=(sel>=0&&odakYon)?erisim(sel,odakYon):null;
   const rel=new Set();
   if(sel>=0){rel.add(sel);G[sel].out.forEach(i=>rel.add(i));G[sel].inn.forEach(i=>rel.add(i))}
   document.querySelectorAll(".nd").forEach(el=>{
     const x=G[+el.dataset.i];let dim=false;
-    if(sel>=0&&!rel.has(x.id))dim=true;
+    if(kume){if(!kume.has(x.id))dim=true;}else if(sel>=0&&!rel.has(x.id))dim=true;
     if(q&&!(x.name+" "+x.path+" "+x.sum).toLowerCase().includes(q))dim=true;
     if(o&&(x.inn.size||x.out.size))dim=true;
     el.classList.toggle("dim",dim);el.classList.toggle("sel",x.id===sel);
@@ -649,8 +697,8 @@ function view(){
   });
   document.querySelectorAll("path.e").forEach(p=>{
     const a=+p.dataset.a,b=+p.dataset.b;
-    p.classList.toggle("on",sel>=0&&(a===sel||b===sel));
-    p.classList.toggle("off",sel>=0&&a!==sel&&b!==sel);
+    if(kume){const ic=kume.has(a)&&kume.has(b);p.classList.toggle("on",ic);p.classList.toggle("off",!ic);}
+    else{p.classList.toggle("on",sel>=0&&(a===sel||b===sel));p.classList.toggle("off",sel>=0&&a!==sel&&b!==sel);}
   });
 }
 function chips(ids){
@@ -674,10 +722,13 @@ function pick(i){
   P.innerHTML='<button class="x" aria-label="Kapat">×</button><h2 style="color:'+col[x.group]+'">'+esc(x.name)+'</h2><div class="p">'+esc(x.path)+"</div>"
     +'<p style="margin:8px 0 4px">'+esc(x.sum)+"</p>"
     +'<span class="tag">'+esc(x.ext||"dosya")+"</span>"+(x.lines?'<span class="tag">'+x.lines+" satır</span>":"")+(kb?'<span class="tag">'+kb+"</span>":"")+'<span class="tag">'+esc(x.group)+"</span>"+status+(girisRolu(x)?'<span class="tag">manifestte bildirilen giriş noktası</span>':"")
-    +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır</h3><span class="p">'+x.sembol.slice(0,8).map(s=>esc(s.ad)+" ("+s.satir+")").join(", ")+(x.sembol.length>8?" … +"+(x.sembol.length-8)+" daha":"")+"</span>":"")
+    +guide(x)+((x.sembol&&x.sembol.length)?'<h3>İçerdiği fonksiyon/sınıflar · satır <em>· tıkla, kodu gör</em></h3><div class="semb">'+x.sembol.slice(0,12).map(s=>'<button class="sbtn" data-satir="'+s.satir+'">'+esc(s.ad)+'<i>'+s.satir+'</i></button>').join("")+(x.sembol.length>12?'<span class="p">+'+(x.sembol.length-12)+' daha</span>':"")+"</div>":"")
+    +(x.text?'<div class="semb"><button class="sbtn" data-satir="1">baştan göster</button></div><pre id="kodKarti" class="kod" hidden></pre>':"")
     +'<div class="nota"><h3>NOT <em>· bu dosya için · haritada kalır · JSON ve MD çıktısına girer</em></h3>'
     +'<textarea id="notaKutu" rows="2" placeholder="Modele ya da gelecekteki sana not: neden dokunulmaz, neyi bozar, ne yapılacak…">'+esc(x.not||"")+"</textarea></div>"
     +gorevTarifi(x)
+    +'<div class="odak"><button class="obtn'+(odakYon==="asagi"?" secili":"")+'" data-odak="asagi">↓ erişim: çağırdıkları ('+x.out.size+')</button>'
+    +'<button class="obtn'+(odakYon==="yukari"?" secili":"")+'" data-odak="yukari">↑ erişim: onu çağıranlar ('+x.inn.size+')</button></div>'
     +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
     +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
     ;
@@ -692,7 +743,7 @@ function pick(i){
     nk.addEventListener("blur",()=>{clearTimeout(z);notYaz(x.path,nk.value);x.not=String(nk.value||"").trim();isaretle()});
   }
 }
-function closeP(){sel=-1;const k=$("#kart");if(k)k.hidden=true;const o=$("#ozet");if(o)o.hidden=false;view()}
+function closeP(){sel=-1;odakYon="";const k=$("#kart");if(k)k.hidden=true;const o=$("#ozet");if(o)o.hidden=false;view()}
 $("#cv").addEventListener("click",e=>{const n=e.target.closest(".nd");n?pick(+n.dataset.i):closeP()});
 $("#cv").addEventListener("keydown",e=>{if(e.key==="Enter"){const n=e.target.closest(".nd");if(n)pick(+n.dataset.i)}});
 $("#panel").addEventListener("click",e=>{
@@ -701,6 +752,12 @@ $("#panel").addEventListener("click",e=>{
     (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(
       ()=>{b.textContent="✓ Kopyalandı";setTimeout(()=>b.textContent="📋 Tarifi kopyala",1500)},
       ()=>{prompt("Kopyalanamadı, elle kopyala:",t)});return}
+  const sb=e.target.closest(".sbtn");
+  if(sb&&sel>=0){kodGoster(sel,+sb.dataset.satir);return}
+  const ob=e.target.closest(".obtn");
+  if(ob){odakYon=(odakYon===ob.dataset.odak)?"":ob.dataset.odak;
+    document.querySelectorAll("#panel .obtn").forEach(b2=>b2.classList.toggle("secili",b2.dataset.odak===odakYon));
+    view();return}
   const c=e.target.closest(".chip");
   if(c){const i=+c.dataset.go;pick(i);const el=document.querySelector('.nd[data-i="'+i+'"]');if(el)el.scrollIntoView({block:"center",inline:"center",behavior:"smooth"})}
 });
@@ -1268,6 +1325,18 @@ function calistirKomutu(){
 }
 /* Model modu metni: her satır TEK alan. Ölçüm (yol, satır, sembol) işaretsiz; yorum alanları sonda.
    Kaynak her zaman yazılır: bu motor KABA'dır (regex ön izleme) — "kesin" demez. */
+/* TAZE: son 24 saatte değişen dosyalar (yalnız başsız modda — mtime'ı cli.js geçirir).
+   Tarayıcıda __MTIME yok → satır hiç yazılmaz, uydurulmaz. */
+function tazeMetni(){
+  try{
+    if(typeof __MTIME==="undefined"||!__MTIME)return "";
+    const sinir=Date.now()-24*3600*1000, y=[];
+    (G||[]).forEach(x=>{const m=__MTIME[x.path];if(m&&m>sinir)y.push(x.path)});
+    if(!y.length)return "";
+    y.sort();
+    return y.length+" dosya son 24 saatte: "+y.slice(0,6).join(" · ")+(y.length>6?" … +"+(y.length-6):"");
+  }catch(e){return ""}
+}
 function modelYaz(){
   const p=_el("modelMetin");if(!p)return;
   if(!G.length){p.textContent="harita yok — bir klasör, zip ya da JSON yükle";return}
@@ -1292,6 +1361,8 @@ function modelYaz(){
   const bagyok=N.filter(x=>bagDurum(x)==="bağ yok").length;
   L.push("durum   okunmadı "+okunmadi+" · kapsam dışı "+kapsam+" · bağ yok "+bagyok+" · belirsiz "+belirsiz
     +TEHLIKE_SIRA.filter(t=>teh[t]).map(t=>" · "+t+" "+teh[t]).join(""));
+  const taze=tazeMetni();
+  if(taze)L.push("taze    "+taze);
   L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0]))).map(([k,v])=>k+" "+v).join(" · "));
   L.push("");
   L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
@@ -1323,7 +1394,9 @@ function modelYaz(){
   if(kenar.length>SINIR)L.push("… +"+(kenar.length-SINIR)+" bağ daha (tamamı JSON çıktısında)");
   /* ---- SEMBOLLER: ad → satır (dosyayı açmadan doğru yere atlamak için) ----
      Sınır: 200 dosya × 8 sembol. Metin şişmesin; kalanı JSON ve MD çıktısında var. */
-  const SEMB_DOSYA=200, SEMB_ADET=8;
+  const SEMB_DOSYA=200, SEMB_ADET=16;   /* 19.11: 8 → 16. Fonksiyonlar öne alındığı için
+                                            yarısı fonksiyon, yarısı değişken olur; 16 dosya başına
+                                            ~1 KB ekliyor, 34 dosyalık projede metin +4 KB. */
   const sembolik=N.filter(x=>x.sembol&&x.sembol.length).sort((a,b)=>String(a.path).localeCompare(String(b.path)));
   if(sembolik.length){
     L.push("");

@@ -19,6 +19,11 @@ Bir projeye dışarıdan bakınca ilk sorular şunlar oluyor: *hangi dosya neyi 
 - Katmanlar çağrı zincirinden hesaplanır: en üstte giriş noktaları, en altta ortak temel parçalar.
 - Bir kutuya tıklayınca **panel** açılır: rolü, riski, çağırdıkları, onu çağıranlar, içindeki fonksiyon/sınıflar **satır numarasıyla**, ve modele verilecek hazır **görev tarifi**.
 
+## Haritada soru sormak
+
+- **Erişim (focus & reach)** — bir kutuya tıkla, panelde **↓ erişim: çağırdıkları** ya da **↑ erişim: onu çağıranlar** düğmesine bas: zincirin **tamamı** yanar, gerisi söner. *"Bunu silersem ne kırılır"* sorusunun cevabı. Bağ sınıfı ayrımı yapılmaz (import · ad · kaynak hepsi zincire girer) — soru *neye dokunuyor*, *kanıtı ne kadar güçlü* değil. Düğmeye tekrar basmak ya da kartı kapatmak erişimi sıfırlar.
+- **Kaynak kartı** — paneldeki **fonksiyon/sınıf** düğmesine tıkla: dosyanın **gerçek satırları** numaralı açılır, seçtiğin satır vurgulanır (üstte 4, altta 10 satır çevre). `baştan göster` dosyanın başını açar. Metni okunmayan dosyada kart **hiç açılmaz** (sır · ikili · 4 MB+): içerik yoksa uydurma da yok.
+
 ## Roller
 
 | Rol | Ne demek | Risk |
