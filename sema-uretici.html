@@ -1179,6 +1179,23 @@ function kokEtiket(){
   return o.length?o[o.length-1]:"proje";
 }
 const yas=(s,n)=>{s=String(s==null?"":s);return s.length>n?s.slice(0,n-1)+"…":s+" ".repeat(n-s.length)};
+/* İP-1 (19.11): kartta hesaplanan tek satırlık özeti MODEL METNİNE taşır.
+   Kaynak = dosyanın KENDİ docstring'i / baştaki yorumu (alıntı). LLM ile üretilmez.
+   Uydurma yok: açıklama yazısı olmayan dosyada "—" yazar; "dosya şunu yapar" diye tahmin edilmez. */
+const OZET_YOK=[
+  /^Dosyada açıklama yazısı yok/,      /* summ() yer tutucusu */
+  /^Bu başlığın altında metin yok/,    /* heading() yer tutucusu */
+  /^İkili ya da okunamayan/,           /* summ() ikili/okunamayan */
+  /^Sır dosyası:/,                     /* okunmadiMetni: sır */
+  /^İçerik okunmadı:/,                 /* okunmadiMetni: uzantı/ikili */
+  /^Dosya 4 MB üzeri/                  /* okunmadiMetni: boyut */
+];
+function ozetTekSatir(x,n){
+  const s=String(x&&x.sum!=null?x.sum:"").replace(/\s+/g," ").trim();
+  if(!s)return "—";
+  for(const re of OZET_YOK)if(re.test(s))return "—";
+  return s.length>n?s.slice(0,n-1)+"…":s;
+}
 /* Model modu metni: her satır TEK alan. Ölçüm (yol, satır, sembol) işaretsiz; yorum alanları sonda.
    Kaynak her zaman yazılır: bu motor KABA'dır (regex ön izleme) — "kesin" demez. */
 function modelYaz(){
@@ -1200,11 +1217,12 @@ function modelYaz(){
   L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(" · "));
   L.push("");
   L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
+  L.push("KURAL: son alan (ne iş yapar) dosyanın KENDİ başlık yorumundan ALINTI; özet yoksa — yazar, tahmin edilmez.");
   L.push("");
-  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum)");
+  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum · ne iş yapar)");
   N.slice().sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(x=>{
     const r=roleOf(x);
-    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+(bagDurum(x)||"—"));
+    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+yas(bagDurum(x)||"—",14)+" "+ozetTekSatir(x,72));
   });
   L.push("");
   L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");

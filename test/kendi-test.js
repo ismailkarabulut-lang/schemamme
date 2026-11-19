@@ -242,5 +242,32 @@ test("T13 paket içi alt modül importları bağ kurar", () => {
   esit(m.belirsiz, [], "belirsiz kalmamalı");
 });
 
+/* T14 — İP-1: kartta hesaplanan özet MODEL METNİNE taşınır; özet yoksa "—" (uydurma yok) */
+function modelMetniAl(dosyalar) {
+  harita(dosyalar);
+  const depo = {}, eski = sandbox.document.getElementById;
+  /* sahte DOM her çağrıda YENİ eleman döndürüyor: aynı id aynı elemanı versin ki
+     modelYaz()'ın yazdığı metni okuyabilelim. */
+  sandbox.document.getElementById = (id) => depo[id] || (depo[id] = sahteEl());
+  try { calistir("modelYaz()"); return depo.modelMetin ? depo.modelMetin.textContent : ""; }
+  finally { sandbox.document.getElementById = eski; }
+}
+test("T14 model metni 'ne iş yapar' alanını taşır, olmayanda — yazar", () => {
+  const metin = modelMetniAl([
+    ["ingest.py", '"""Kaynak içe aktarma: Hermes state.db ve Telegram HTML export."""\nimport db\n'],
+    ["db.py", "import os\n\ndef baglan():\n    pass\n"],
+    ["bagli.py", "import db\n"],
+  ]);
+  if (!metin.includes("ne iş yapar")) throw new Error("sütun başlığında 'ne iş yapar' yok");
+  const satir = (ad) => metin.split("\n").find((s) => s.startsWith(ad + " ")) || "";
+  if (!satir("ingest.py")) throw new Error("ingest.py satırı metinde yok");
+  if (!/Kaynak içe aktarma: Hermes state\.db/.test(satir("ingest.py")))
+    throw new Error("docstring özeti metne taşınmamış · gelen: " + satir("ingest.py"));
+  if (!satir("db.py").trim().endsWith("—"))
+    throw new Error("özeti olmayan dosyada — yok · gelen: " + satir("db.py"));
+  if (/Dosyada açıklama yazısı yok/.test(metin))
+    throw new Error("yer tutucu metin modele sızdı (— olmalıydı)");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
