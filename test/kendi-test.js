@@ -215,8 +215,10 @@ test("T14 model metni 'ne iş yapar' alanını taşır, olmayanda — yazar", ()
   if (!satir("ingest.py")) throw new Error("ingest.py satırı metinde yok");
   if (!/Kaynak içe aktarma: Hermes state\.db/.test(satir("ingest.py")))
     throw new Error("docstring özeti metne taşınmamış · gelen: " + satir("ingest.py"));
-  if (!satir("db.py").trim().endsWith("—"))
-    throw new Error("özeti olmayan dosyada — yok · gelen: " + satir("db.py"));
+  /* Özet yok: ya "—" ya da ALINTI olan ilk tanım satırı ([tanım]). Uydurma cümle yasak. */
+  const db = satir("db.py").trim();
+  if (!(db.endsWith("—") || db.includes("[tanım] ")))
+    throw new Error("özeti olmayan dosyada — / [tanım] yok · gelen: " + db);
   if (/Dosyada açıklama yazısı yok/.test(metin))
     throw new Error("yer tutucu metin modele sızdı (— olmalıydı)");
 });
@@ -242,6 +244,72 @@ test("T15 model metni girdi sırasından bağımsız", () => {
     const i = sa.findIndex((s, k) => s !== sb[k]);
     throw new Error("sıra değişince metin değişti · ilk fark satır " + (i + 1) + ": [" + sa[i] + "] ≠ [" + sb[i] + "]");
   }
+});
+
+/* T16 — KÜNYE: amaç ve çalıştır alanları ALINTI + kaynak etiketiyle yazılır; yoksa — */
+test("T16 amaç/çalıştır alanları kaynağıyla yazılır, bulunamazsa —", () => {
+  const metin = modelMetniAl([
+    ["README.md", "# Kredi\n\nBu proje kredi akışını izleyen küçük bir araçtır.\n\n```bash\nnode server.js\n```\n"],
+    ["package.json", JSON.stringify({ scripts: { dev: "node server.js" } })],
+    ["server.js", "const x = 1;\n"],
+  ]);
+  if (!/^amaç\s+Bu proje kredi akışını izleyen/m.test(metin)) throw new Error("amaç satırı README'den gelmedi");
+  if (!/\[README\]/.test(metin)) throw new Error("amaç kaynağı yazılmadı");
+  if (!/^çalıştır\s+npm run dev\s+\[package\.json\]/m.test(metin)) throw new Error("çalıştır satırı package.json'dan gelmedi");
+  const bos = modelMetniAl([["a.py", "x = 1\n"]]);
+  if (!/^amaç\s+—/m.test(bos)) throw new Error("amaç bulunamazken — yazmadı");
+  if (!/^çalıştır\s+—/m.test(bos)) throw new Error("çalıştır bulunamazken — yazmadı");
+});
+
+/* T17 — TEHLİKE: ad kuralı. Eski kopya / üretilmiş / sır ayrılır; yanlış etiket verilmez. */
+test("T17 tehlike etiketleri doğru, yanlış etiket yok", () => {
+  const metin = modelMetniAl([
+    ["panel.py", "print(1)\n"],
+    ["panel.py.bak-2026-11-04", "print(2)\n"],
+    ["dist/bundle.js", "var a = 1;\n"],
+    ["app.min.js", "var b = 2;\n"],
+    [".env", "ANAHTAR=1\n"],
+    ["mimari_v4_canli.html", "<html><body>x</body></html>\n"],
+  ]);
+  const sat = (ad) => metin.split("\n").find((s) => s.startsWith(ad + " ")) || "";
+  if (!/eski kopya/.test(sat("panel.py.bak-2026-11-04"))) throw new Error("eski kopya etiketi yok · gelen: " + sat("panel.py.bak-2026-11-04"));
+  if (!/üretilmiş/.test(sat("dist/bundle.js"))) throw new Error("dist/ üretilmiş sayılmadı");
+  if (!/üretilmiş/.test(sat("app.min.js"))) throw new Error("*.min.js üretilmiş sayılmadı");
+  if (!/sır/.test(sat(".env"))) throw new Error("sır etiketi yok");
+  if (/eski kopya|üretilmiş|sır/.test(sat("mimari_v4_canli.html"))) throw new Error("canlı html yanlış etiket aldı");
+});
+
+/* T18 — JSON TURU: dışa aktarılan özet geri yüklenince korunur (eskiden her satır
+   "Haritadan yüklendi…" yer tutucusuna düşüyordu, gerçek özetler kayboluyordu). */
+test("T18 JSON'a özet taşınır, geri yüklenince korunur", () => {
+  harita([
+    ["ingest.py", '"""Kaynak içe aktarma: Hermes state.db."""\nimport db\n'],
+    ["db.py", "import os\n"],
+  ]);
+  const j = JSON.parse(calistir("JSON.stringify(grafVerisi())"));
+  const kayit = (j.dosya || []).find((d) => d.yol === "ingest.py") || {};
+  if (!/Kaynak içe aktarma/.test(String(kayit.ozet || ""))) throw new Error("JSON'da özet alanı yok");
+  calistir("grafYukle(" + JSON.stringify(j) + ")");
+  const depo = {}, eski = sandbox.document.getElementById;
+  sandbox.document.getElementById = (id) => depo[id] || (depo[id] = sahteEl());
+  let metin = "";
+  try { calistir("modelYaz()"); metin = depo.modelMetin ? depo.modelMetin.textContent : ""; }
+  finally { sandbox.document.getElementById = eski; }
+  const ing = metin.split("\n").find((s) => s.startsWith("ingest.py ")) || "";
+  if (!/Kaynak içe aktarma/.test(ing)) throw new Error("geri yüklenen metinde özet yok · gelen: " + ing);
+  if (/Haritadan yüklendi/.test(metin)) throw new Error("yer tutucu metne sızdı");
+});
+
+/* T19 — ÖZET YOKSA İLK TANIM SATIRI: alıntı, [tanım] etiketiyle. Tanım da yoksa — kalır. */
+test("T19 özet yoksa ilk tanım satırı [tanım] ile alıntılanır", () => {
+  const metin = modelMetniAl([
+    ["Repo.kt", "package x\n\nimport y\n\nclass Repo(private val dao: Dao) {\n    fun a() {}\n}\n"],
+    ["bos.py", "from .x import y\n\nraise SystemExit(1)\n"],
+  ]);
+  const sat = (ad) => metin.split("\n").find((s) => s.startsWith(ad + " ")) || "";
+  if (!/\[tanım\] class Repo\(private val dao: Dao\)/.test(sat("Repo.kt")))
+    throw new Error("[tanım] etiketli alıntı yok · gelen: " + sat("Repo.kt"));
+  if (!sat("bos.py").trim().endsWith("—")) throw new Error("tanım da yokken — yazmadı · gelen: " + sat("bos.py"));
 });
 
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");

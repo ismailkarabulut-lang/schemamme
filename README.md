@@ -102,7 +102,8 @@ Terminal=false
 - Her haritanın başında **KABA (ön izleme — kesin değil)** yazar. Harita yön verir, **kod karar verir**.
 - `bağ yok` = bu haritada bulunamadı; "kullanılmıyor" hükmü değil.
 - `belirsiz` = import yazılmış ama hedefi çözülememiş (göreli yol haritada yok, iki aday var, alias çözülmüyor).
-- `—` = ölçüm yok/boş. Model metnindeki *ne iş yapar* sütunu dosyanın **kendi** başlık yorumundan alıntıdır; yoksa `—` yazar, tahmin edilmez.
+- `—` = ölçüm yok/boş. Model metnindeki *ne iş yapar* sütunu dosyanın **kendi** başlık yorumundan alıntıdır; başlık yorumu yoksa ilk tanım satırı `[tanım]` etiketiyle alıntılanır, o da yoksa `—` yazar. Hiçbir durumda cümle uydurulmaz.
+- `amaç` / `çalıştır` da **alıntıdır** ve kaynağı köşeli parantezde yazar (`[README]`, `[package.json]`, `[__main__.py]`). Bulunamayan `—` kalır.
 - **Sır dosyaları** (`.env`, `*.pem`, `id_rsa`, `secrets*`…): haritada görünür, metni okunmaz, hiçbir çıktıya yazılmaz.
 
 ## Bilinen sınırlar

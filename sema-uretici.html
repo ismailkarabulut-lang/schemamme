@@ -808,7 +808,7 @@ function roleOf(x){
     if((x.nd||"")==="sir")return{short:"okunmadı · sır",long:"Sır dosyası olduğu için metni okunmadı (anahtar/parola tutabilir). Rol ve bağ hesaplanmadı; \"kullanılmıyor\" hükmü verilmez.",risk:"ölçülmedi"};
     if((x.nd||"")==="uzanti")return{short:"okunmadı · uzantı",long:"Bu dosyanın uzantısı metin olarak okunmuyor ("+(x.ext||"uzantısız")+"), içeriği ölçülmedi. Bu yüzden \"bağımsız\" ya da \"kullanılmıyor\" hükmü VERİLMEZ. Rolü öğrenmek için dosyayı elle aç.",risk:"ölçülmedi"};
     if((x.nd||"")==="ikili")return{short:"okunmadı · ikili",long:"Dosyada metin dışı baytlar var (ikili içerik). Rol ve bağ hesaplanmadı; \"kullanılmıyor\" hükmü verilmez.",risk:"ölçülmedi"};
-    return{short:"içerik okunmadı",long:"Dosya 4 MB üzeri olduğu için içeriği okunmadı; rol ve bağ hesaplanmadı. Bu kutu \"kullanılmıyor\" demek değildir — ölçülmemiştir. Dosyayı küçük parçalara bölerek ya da sema_ast.py ile harita üreterek analiz et.",risk:"ölçülmedi"};
+    return{short:"içerik okunmadı",long:"Dosya 4 MB üzeri olduğu için içeriği okunmadı; rol ve bağ hesaplanmadı. Bu kutu \"kullanılmıyor\" demek değildir — ölçülmemiştir. Dosyayı küçük parçalara bölerek incele.",risk:"ölçülmedi"};
   }
   /* TEST DOSYASI ayrı rol: kimse çağırmıyor olması onu "giriş noktası" yapmaz. */
   if(testDosyasi(x))return{short:"test",long:"Test dosyası. Üretim akışının parçası değil; kimse onu çağırmaması normaldir, giriş noktası değildir. Risk: düşük — bozulursa uygulama değil, güvence kaybolur.",risk:"düşük"};
@@ -834,21 +834,8 @@ function guide(x){
   if(hepsiZayif(x))t+='• Gelen bağların hepsi <b>ad eşleşmesi</b> (import satırı değil) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
   return t+'• Dokunma riski: <b>'+r.risk+'</b> (kaç dosyanın ona bağlı olduğuna göre)</div>';
 }
-function modelMetni(){
-  const NL=String.fromCharCode(10),N=G.slice().sort((a,b)=>a.L-b.L||a.path.localeCompare(b.path));
-  const nm=s=>[...s].map(i=>G[i].name).join(",")||"-";
-  const anlamli=s=>s&&!/^Dosyada açıklama|^Bu başlığın altında|Ne yaptığını öğrenmek için/.test(s)?s:"";
-  const O=["# "+N.length+" dosya · "+N.reduce((s,x)=>s+x.out.size,0)+" bağlantı",""];
-  let son=-1;
-  N.forEach(x=>{
-    if(x.L!==son){O.push("## Katman "+(x.L+1));son=x.L}
-    const r=roleOf(x),s=anlamli(x.sum);
-    O.push("- "+x.path+" ["+r.short+"]"+(s?" "+s.slice(0,70):"")+(x.out.size?" → "+nm(x.out):""));
-  });
-  return O.join(NL);
-}
-/* Eski "🧠 Modele" düğmesi kaldırıldı: model modu aynı metni ekranda gösteriyor ve
-   metin seçilebilir/kopyalanabilir. Panoya kopyalama tuşla: Ctrl/Cmd+C. */
+/* Eski "🧠 Modele" düğmesi ve eski metin üreteci (modelMetni) kaldırıldı (19.11):
+   model modu tek kaynak — modelYaz(). İki ayrı metin üreteci, iki farklı cevap demekti. */
 document.addEventListener("click",e=>{
   const lbl=e.target.closest("text.lbl");
   if(!lbl||heading)return;
@@ -858,6 +845,7 @@ document.addEventListener("click",e=>{
 });
 function buildGuide(){
   const NL=String.fromCharCode(10),O=[],N=G.slice();
+  const amac=amacMetni(), cal=calistirKomutu();
   const nm=s=>[...s].map(i=>G[i].name).join(", ")||"yok";
   const nmT=(s,from)=>[...s].map(i=>G[i].name+(GUVEN.get(from+"-"+i)==="ad"?" (ad)":"")).join(", ")||"yok";
   const E=N.reduce((s,x)=>s+x.out.size,0);
@@ -866,9 +854,9 @@ function buildGuide(){
         ayar=N.filter(x=>roleOf(x).short==="yapılandırma"),
         okuU=N.filter(x=>x.okunmadi&&x.nd==="uzanti"),okuI=N.filter(x=>x.okunmadi&&x.nd==="ikili"),
         okuB=N.filter(x=>x.okunmadi&&x.nd!=="uzanti"&&x.nd!=="ikili");
-  O.push("# Şema Haritası","","> Şema Üretici ile otomatik üretildi (harita.py'nin PROJE-HARITASI.md'sinden ayrı dosya). **Yapay zeka modelleri için:** bir şey aramadan önce bu dosyayı oku. “Sembol dizini” ve “Dosya kartları” bölümlerinden doğru dosyayı bul, sonra yalnızca o dosyayı aç. Bağlantılar otomatik tahmindir, kesin değildir.","");
-  O.push("## Özet","- "+N.length+" dosya, "+E+" bağlantı","- Giriş noktaları (manifestte bildirilen ya da kimse çağırmıyor): "+(ent.map(x=>x.path).join(", ")||"yok"),"- Dokunması riskli (çok dosya buna bağlı): "+(top.map(x=>x.name+" ("+x.inn.size+")").join(", ")||"yok"),"- Bağımsız (hiçbir bağlantı yok): "+(orp.map(x=>x.path).join(", ")||"yok"),"- Yapılandırma (kod bağı kurmaz, \"kullanılmıyor\" hükmü verilmez): "+(ayar.map(x=>x.path).join(", ")||"yok"),"- Okunmayan uzantı (rol/bağ hükmü VERİLMEDİ): "+(okuU.map(x=>x.path).join(", ")||"yok"),"- İkili içerik (rol/bağ hükmü VERİLMEDİ): "+(okuI.map(x=>x.path).join(", ")||"yok"),"- İçeriği okunmayan 4 MB üstü (rol/bağ hükmü VERİLMEDİ): "+(okuB.map(x=>x.path).join(", ")||"yok"),"");
-  O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (ad): bu bağ yalnız dosya adı benzerliğinden çıkarıldı; koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
+  O.push("# Şema Haritası · "+kokEtiket()+(KOK_YOL?" · "+KOK_YOL:"")+" · "+damga(),"","> Şema Üretici ile üretildi — **KABA (ön izleme, kesin değil)**; bağlar tahmindir, kod karar verir. **Yapay zeka modelleri için:** bir şey aramadan önce bu dosyayı oku. “Sembol dizini” ve “Dosya kartları” bölümlerinden doğru dosyayı bul, sonra yalnızca o dosyayı aç.","");
+  O.push("## Özet","- amaç: "+amac.metin+(amac.kaynak?"  ["+amac.kaynak+"]":""),"- çalıştır: "+(cal.kaynak?cal.komut+"  ["+cal.kaynak+"]":"—"),"- "+N.length+" dosya, "+E+" bağlantı","- Giriş noktaları (manifestte bildirilen ya da kimse çağırmıyor): "+(ent.map(x=>x.path).join(", ")||"yok"),"- Dokunması riskli (çok dosya buna bağlı): "+(top.map(x=>x.name+" ("+x.inn.size+")").join(", ")||"yok"),"- Bağımsız (hiçbir bağlantı yok): "+(orp.map(x=>x.path).join(", ")||"yok"),"- Yapılandırma (kod bağı kurmaz, \"kullanılmıyor\" hükmü verilmez): "+(ayar.map(x=>x.path).join(", ")||"yok"),"- Okunmayan uzantı (rol/bağ hükmü VERİLMEDİ): "+(okuU.map(x=>x.path).join(", ")||"yok"),"- İkili içerik (rol/bağ hükmü VERİLMEDİ): "+(okuI.map(x=>x.path).join(", ")||"yok"),"- İçeriği okunmayan 4 MB üstü (rol/bağ hükmü VERİLMEDİ): "+(okuB.map(x=>x.path).join(", ")||"yok"),"");
+  O.push("## Nasıl okunur","- Kullandığı: bu dosyanın çağırdığı dosyalar. Bozulurlarsa bu da bozulur.","- Kullanan: bu dosyayı çağıranlar. Bunu değiştirirsen onlar etkilenir.","- Katman 1 en üsttür (başlatıcılar), son katman en alttır (temel parçalar).","- (ad): bu bağ import satırından değil, adın KODDA geçmesinden çıktı (tanım tek dosyada); koda bakıp doğrulanmadan silme ya da değiştirme yapılmaz.","");
   O.push("## Katmanlar");
   const by={};N.forEach(x=>{if(x.inn.size||x.out.size)(by[x.L]=by[x.L]||[]).push(x)});
   Object.keys(by).sort((a,b)=>a-b).forEach(k=>{O.push("### Katman "+(+k+1));by[k].forEach(x=>O.push("- "+x.path+" ["+roleOf(x).short+"]: "+x.sum.slice(0,140)));O.push("")});
@@ -996,7 +984,6 @@ function pngOlustur(){
   g.fillText("Şema Üretici · kesikli ok = ad eşleşmesi",8,c.height/S-8);
   return c;
 }
-function pngVeri(){const c=pngOlustur();return c.toDataURL("image/png")}
 function pngIndir(){
   /* Yerleşim yalnız ÇİZİLEN kutular için hesaplanır; 2.500 üstünde PNG eksik çıkar. */
   if(G.length>2500)return alert("PNG 2.500 kutuya kadar çizilir ("+G.length+" dosya var). Rol/bağ hesabı ve JSON · MD çıktısı tüm dosyaları kapsar.");
@@ -1030,7 +1017,7 @@ function gorevTarifi(x){
   if(x.okunmadi){
     if(x.nd==="sir")
       return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Sır dosyası: içeriği bilerek okunmadı (anahtar/parola tutabilir). Bağ ve rol hesaplanmadı — <b>bağlantısız sayma.</b> Modele: "bu dosyanın içeriğini okuma, sadece varlığını bil; değerleri sohbete ve koda yazma" de.</div>';
-    return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Dosya 4 MB üzeri olduğu için içeriği okunmadı; bağ ve rol hesaplanmadı. <b>Bağlantısız sayma:</b> "kullanılmıyor" hükmü burada veri yokluğundan doğar. Modele: "önce dosyayı küçük parçalara böl ya da sema_ast.py ile harita üret, sonra karar ver" de.</div>';
+    return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Dosya 4 MB üzeri olduğu için içeriği okunmadı; bağ ve rol hesaplanmadı. <b>Bağlantısız sayma:</b> "kullanılmıyor" hükmü burada veri yokluğundan doğar. Modele: "önce dosyayı küçük parçalara böl, sonra karar ver" de.</div>';
   }
   if(!oku.length&&!etk.length)
     return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Bağlantısı yok: ya tek başına çalışan bir araç ya da kullanılmayan dosya. Modele: “çağrıldığı yeri ara; bulunamazsa silme adayıdır” de.</div>';
@@ -1056,6 +1043,7 @@ function grafVerisi(){
       i:x.id, ad:x.name, yol:x.path, ext:x.ext, satir:x.lines||0,
       rol:heading?"":roleOf(x).short, risk:heading?"":roleOf(x).risk,
       katman:(x.L|0)+1, sembol:(x.sembol||[]).slice(0,40), okunmadi:!!x.okunmadi, neden:x.nd||"",
+      ozet:(x.okunmadi?"":String(x.sum||"")),   /* özet JSON'da taşınır: geri yüklenen harita özetsiz kalmasın */
       not:(x.not||notVer(x.path)||"")
     })),
     kenar:(()=>{const r=[];N.forEach(a=>a.out.forEach(b=>r.push({a:a.id,b:b,tip:GUVEN.get(a.id+"-"+b)||"ad"})));return r})()
@@ -1077,11 +1065,8 @@ try{NOTLAR=JSON.parse((NOT_DEPO&&NOT_DEPO.getItem(NOT_ANAHTAR))||"{}")||{}}catch
 function notKaydet(){try{NOT_DEPO&&NOT_DEPO.setItem(NOT_ANAHTAR,JSON.stringify(NOTLAR))}catch(e){uyar("↺ Notlar kaydedilemedi ("+e.name+") — sayfa kapanınca kaybolur")}}
 function notVer(yol){return NOTLAR[yol]||""}
 function notYaz(yol,metin){const t=String(metin==null?"":metin).trim();if(t)NOTLAR[yol]=t;else delete NOTLAR[yol];notKaydet()}
-function kaydet(E){
-  /* HARİTA SAKLANMAZ (Kaptan 19.11). Eskiden bütün dosya metinleri "semaSonHarita" anahtarına
-     yazılıyordu: diske kaydedilmiş tam bir kopya = bayat bilgi. Yeni oturumda eski harita
-     "güncel" sanılıp hata katlanıyordu. Artık yalnız NOTLAR saklanır (yol→not, insan yazısı). */
-}
+/* HARİTA SAKLANMAZ (Kaptan 19.11): harita diske/inndexli depoya yazılmaz, oturum kapanınca
+   biter. Yalnız NOTLAR (yol→not, insan yazısı) sessionStorage'da durur. */
 function indir(ad,metin,tip){
   const blob=new Blob([metin],{type:tip||"text/plain;charset=utf-8"});
   const u=URL.createObjectURL(blob),a=document.createElement("a");
@@ -1106,7 +1091,7 @@ function grafYukle(j){
   G=D.map((d,i)=>({id:i,name:d.ad,path:d.yol||d.ad,ext:(d.ext||String(d.ad).split(".").pop()||""),
     group:(d.yol||"").includes("/")?(d.yol||"").split("/")[0]:"(kök)",text:null,size:0,
     lines:d.satir||0,belirsiz:0,out:new Set(),inn:new Set(),nd:d.neden||(d.okunmadi?"boyut":""),
-    sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):"Haritadan yüklendi ("+(j.kaynak||"kaynak")+"). Dosya metni yok; içerik için dosyayı aç.",
+    sum:d.okunmadi?okunmadiMetni({okunmadi:true,neden:d.neden||"boyut",path:d.yol||d.ad}):String(d.ozet||""),
     defs:(d.sembol||[]).map(s=>s.ad),sembol:(d.sembol||[]),L:(d.katman||1)-1,okunmadi:!!d.okunmadi,
     not:(d.not&&String(d.not).trim())||notVer(d.yol||d.ad)||"",kod:"",yorumsuz:""}));
   GUVEN.clear();const tipler={};
@@ -1133,7 +1118,7 @@ function jsonYukle(file){
 /* ===== BAĞLA ===== */
 const _buildOnce=build;
 build=function(E){
-  _buildOnce(E);kartGuncelle();kaydet(E);
+  _buildOnce(E);kartGuncelle();
   ["jdis","jicL"].forEach(id=>{const el=document.getElementById(id);if(el)el.hidden=!G.length});
   /* Yeni harita: özet yan alanda görünür (üstte yazı yok). Model modundaysa metni tazele. */
   if(MOD==="model")modelYaz();else if(G.length){closeP();panelAc(true)}
@@ -1186,6 +1171,7 @@ const OZET_YOK=[
   /^Dosyada açıklama yazısı yok/,      /* summ() yer tutucusu */
   /^Bu başlığın altında metin yok/,    /* heading() yer tutucusu */
   /^İkili ya da okunamayan/,           /* summ() ikili/okunamayan */
+  /^Haritadan yüklendi/,               /* eski JSON'ların yer tutucusu (19.11 öncesi) */
   /^Sır dosyası:/,                     /* okunmadiMetni: sır */
   /^İçerik okunmadı:/,                 /* okunmadiMetni: uzantı/ikili */
   /^Dosya 4 MB üzeri/                  /* okunmadiMetni: boyut */
@@ -1195,6 +1181,90 @@ function ozetTekSatir(x,n){
   if(!s)return "—";
   for(const re of OZET_YOK)if(re.test(s))return "—";
   return s.length>n?s.slice(0,n-1)+"…":s;
+}
+/* ÖZET YOKSA İLK TANIM SATIRI — uydurma değil, ALINTI; ama özetle karışmasın diye [tanım] ile
+   işaretlenir. Kaynak yoksa (JSON'dan yüklenmiş harita) "—" kalır. */
+const TANIM_RE=/(^|\s)(class|object|interface|fun|def|function|export\s+default|export\s+function|export\s+const|async\s+def)\s+[A-Za-z_]/;
+function ozetVeyaTanim(x,n){
+  const s=ozetTekSatir(x,n);
+  if(s!=="—")return s;
+  const t=String((x&&x.text)||"");
+  if(!t)return "—";
+  for(const satir of t.split("\n")){
+    const h=satir.trim();
+    if(!h||h.length<6)continue;
+    if(/^(\/\/|#|\*|\/\*|--)/.test(h))continue;          /* yorum satırı değil */
+    if(TANIM_RE.test(h)){
+      const kisa=h.replace(/\s*\{\s*$/,"").replace(/\s+/g," ").slice(0,Math.max(20,n-8));
+      return "[tanım] "+kisa;
+    }
+  }
+  return "—";
+}
+/* ---- KÜNYE ----
+   Kök yol yalnız başsız çalışmada (cli.js) bilinir; tarayıcı dosya yolu vermez, uydurulmaz.
+   Damga: metnin NE ZAMAN üretildiği. Tazeliği bilinmeyen metin, bayat metindir. */
+let KOK_YOL="";
+function damga(){
+  const d=new Date(),p2=n=>String(n).padStart(2,"0");
+  return p2(d.getDate())+"."+p2(d.getMonth()+1)+"."+d.getFullYear()+" "+p2(d.getHours())+":"+p2(d.getMinutes());
+}
+/* TEHLİKE — yalnız AD KURALI (tahmin yok): eski kopya · üretilmiş · sır. */
+function tehlike(x){
+  const p=String(x.path||"").replace(/\\/g,"/"), nm=String(x.name||"");
+  if(x.okunmadi&&x.nd==="sir")return "sır";
+  if(/(^|\/)(dist|build|out|__pycache__|node_modules)(\/|$)/.test(p)||/\.min\.(js|css)$/i.test(nm))return "üretilmiş";
+  if(/(\.bak|\.orig|\.old|\.yedek|~$|kopya)/i.test(nm))return "eski kopya";
+  return "";
+}
+const TEHLIKE_SIRA=["sır","eski kopya","üretilmiş"];
+/* AMAÇ — ALINTI. Sıra: README ilk paragrafı → giriş dosyasının özeti → en çok çağrılan dosya.
+   Hiçbiri yoksa "—". Uydurma yok: "bu proje şunu yapar" diye cümle kurulmaz. */
+function amacMetni(){
+  const temiz=s=>String(s||"").replace(/\s+/g," ").trim();
+  const okunur=x=>x&&!x.okunmadi&&x.text;
+  const readme=G.filter(x=>/(^|\/)readme(\.md|\.txt)?$/i.test(x.path)&&okunur(x))[0];
+  if(readme){
+    /* ŞABLON BOŞ LAKIRDISI: AI Studio benzeri hazır README'lerin ilk cümleleri projeyi
+       anlatmaz ("This contains everything you need…"). Alıntı olsa da yanıltıcı → atlanır. */
+    const BOSLAKIRDI=/^(this contains everything you need|view your app in ai studio|run and deploy your ai studio)/i;
+    for(const s of readme.text.split("\n").map(t=>t.trim())){
+      if(!s||/^[#>`|<*]|^!\[|^```|^[-*+]\s|^\d+\.\s|^https?:\/\//.test(s))continue;   /* başlık/etiket/görsel/link/kalın değil */
+      if(/<img|<div|<p[\s>]|\]\(/i.test(s))continue;                                   /* satır içi HTML ya da markdown bağlantısı değil */
+      if(BOSLAKIRDI.test(s))continue;
+      if(s.length<25)continue;                                                        /* tek kelimelik satır değil */
+      return {metin:temiz(s).slice(0,240),kaynak:"README"};
+    }
+  }
+  const g=girisNoktalari()[0];
+  if(g&&ozetTekSatir(g,240)!=="—")return {metin:ozetTekSatir(g,240),kaynak:g.path};
+  const merkez=G.slice().sort((a,b)=>b.inn.size-a.inn.size||String(a.path).localeCompare(String(b.path)))[0];
+  if(merkez&&ozetTekSatir(merkez,240)!=="—")return {metin:ozetTekSatir(merkez,240),kaynak:merkez.path};
+  return {metin:"—",kaynak:""};
+}
+/* ÇALIŞTIR — manifest/metinden okunan komut, KAYNAĞIYLA. Bulunamazsa "—". */
+function calistirKomutu(){
+  const pj=G.filter(x=>/(^|\/)package\.json$/.test(x.path)&&x.text&&!x.okunmadi)[0];
+  if(pj){try{const s=(JSON.parse(pj.text)||{}).scripts||{},ad=["start","dev","serve","build","test"].find(k=>s[k]);
+    if(ad)return {komut:"npm run "+ad,kaynak:pj.path}}catch(e){}}
+  const rk=G.filter(x=>/(^|\/)readme(\.md|\.txt)?$/i.test(x.path)&&x.text&&!x.okunmadi)[0];
+  if(rk){const m=rk.text.match(/```[a-z]*\n([\s\S]*?)```/);
+    if(m){const ilk=m[1].split("\n").map(s=>s.trim()).filter(s=>s&&!s.startsWith("#"))[0];
+      if(ilk)return {komut:ilk.slice(0,120),kaynak:rk.path+" kod bloğu"}}}
+  const py=G.filter(x=>/(^|\/)pyproject\.toml$/.test(x.path)&&x.text&&!x.okunmadi)[0];
+  if(py){const m=py.text.match(/\[project\.scripts\]([\s\S]*?)(\n\[|$)/);
+    if(m){const st=m[1].split("\n").map(s=>s.trim()).filter(s=>s&&!s.startsWith("#"))[0];
+      if(st)return {komut:st.split("=")[0].trim(),kaynak:py.path+" project.scripts"}}}
+  const mk=G.filter(x=>/(^|\/)Makefile$/.test(x.path)&&x.text&&!x.okunmadi)[0];
+  if(mk){const m=mk.text.match(/^([A-Za-z0-9_.-]+):/m);if(m)return {komut:"make "+m[1],kaynak:"Makefile"}}
+  /* Python paketi: kökte __main__.py varsa `python3 -m <paket>` DİLİN kuralıdır (tahmin değil).
+     Yalnız klasör adı geçerli bir modül adıysa önerilir. */
+  const ana=G.filter(x=>/^__main__\.py$/.test(x.path))[0];
+  const paketAdi=String(kokEtiket()||"").trim();
+  if(ana&&/^[A-Za-z_]\w*$/.test(paketAdi))return {komut:"python3 -m "+paketAdi,kaynak:"__main__.py"};
+  const sh=G.filter(x=>/(^|\/)(run|baslat|start)\.sh$/.test(x.path))[0];
+  if(sh)return {komut:"./"+sh.path.split("/").pop(),kaynak:"betik"};
+  return {komut:"—",kaynak:""};
 }
 /* Model modu metni: her satır TEK alan. Ölçüm (yol, satır, sembol) işaretsiz; yorum alanları sonda.
    Kaynak her zaman yazılır: bu motor KABA'dır (regex ön izleme) — "kesin" demez. */
@@ -1210,22 +1280,30 @@ function modelYaz(){
   const okunmadi=N.filter(x=>x.okunmadi).length, bagsiz=N.filter(x=>!x.inn.size&&!x.out.size).length;
   const belirsiz=N.reduce((t,x)=>t+(x.belirsiz||0),0);
   const dil={};N.forEach(x=>{const e=x.ext||"yok";dil[e]=(dil[e]||0)+1});
+  const amac=amacMetni(), cal=calistirKomutu();
+  const teh={};N.forEach(x=>{const t=tehlike(x);if(t)teh[t]=(teh[t]||0)+1});
   const L=[];
-  L.push("# "+kokEtiket()+" · "+N.length+" dosya · "+bag+" bağ · KABA (ön izleme — kesin değil)");
+  L.push("# "+kokEtiket()+(KOK_YOL?" · "+KOK_YOL:"")+" · "+N.length+" dosya · "+bag+" bağ · "+damga()+" · KABA (ön izleme — kesin değil)");
+  L.push("amaç    "+amac.metin+(amac.kaynak?"  ["+amac.kaynak+"]":""));
+  L.push("çalıştır "+(cal.kaynak?cal.komut+"  ["+cal.kaynak+"]":"—"));
   L.push("giriş   "+giris);
   L.push("riskli  "+riskli);
   const kapsam=N.filter(x=>bagDurum(x)==="kapsam dışı").length;
   const bagyok=N.filter(x=>bagDurum(x)==="bağ yok").length;
-  L.push("durum   okunmadı "+okunmadi+" · kapsam dışı "+kapsam+" · bağ yok "+bagyok+" · belirsiz "+belirsiz);
-  L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]).map(([k,v])=>k+" "+v).join(" · "));
+  L.push("durum   okunmadı "+okunmadi+" · kapsam dışı "+kapsam+" · bağ yok "+bagyok+" · belirsiz "+belirsiz
+    +TEHLIKE_SIRA.filter(t=>teh[t]).map(t=>" · "+t+" "+teh[t]).join(""));
+  L.push("dil     "+Object.entries(dil).sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0]))).map(([k,v])=>k+" "+v).join(" · "));
   L.push("");
   L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
-  L.push("KURAL: son alan (ne iş yapar) dosyanın KENDİ başlık yorumundan ALINTI; özet yoksa — yazar, tahmin edilmez.");
+  L.push("KURAL: son alan (ne iş yapar) dosyanın KENDİ başlık yorumundan ALINTI; özet yoksa — yazar, tahmin edilmez. [tanım] = başlık yorumu yok, ilk tanım satırı alıntılandı.");
+  L.push("KURAL: çağırdığı/çağıran = bağ SAYISI (adları '## bağlar' bölümünde) · durum — = ölçüldü, sorun yok · tehlike — = etiket yok.");
+  L.push("KURAL: amaç/çalıştır da ALINTI — köşeli parantez kaynağı gösterir. tehlike = AD KURALI: eski kopya (.bak/.old/~) · üretilmiş (dist/build/*.min.js) · sır (metni okunmadı).");
+  L.push("KURAL: yollar"+(KOK_YOL?" köke göre GÖRELİ — kök: "+KOK_YOL:" bu klasöre göre görelidir (tarayıcı mutlak yol vermez)")+".");
   L.push("");
-  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum · ne iş yapar)");
+  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum · tehlike · ne iş yapar)");
   N.slice().sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(x=>{
     const r=roleOf(x);
-    L.push(yas(x.path,54)+" "+yas(roleOf(x).short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+yas(bagDurum(x)||"—",14)+" "+ozetTekSatir(x,72));
+    L.push(yas(x.path,54)+" "+yas(r.short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+yas(bagDurum(x)||"—",14)+" "+yas(tehlike(x)||"—",12)+" "+ozetVeyaTanim(x,72));
   });
   L.push("");
   L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");
@@ -1233,6 +1311,29 @@ function modelYaz(){
     const oku=[...x.out].map(i=>G[i].name).slice(0,4).join(", ")||"—";
     L.push(yas(x.path,54)+" → "+oku);
   });
+  /* ---- BAĞLAR: "dokunursam ne kırılır" sorusunun ADLI cevabı ----
+     Tabloda yalnız sayı vardı; ad olmadan soru cevaplanamıyor. Sınır: 300 satır. */
+  const kenar=[];
+  N.forEach(a=>[...a.out].forEach(b=>{const B=G[b];if(B)kenar.push([a.path,B.path,GUVEN.get(a.id+"-"+b)||"ad"])}));
+  kenar.sort((x,y)=>x[0].localeCompare(y[0])||x[1].localeCompare(y[1]));
+  const SINIR=300;
+  L.push("");
+  L.push("## bağlar  (çağıran → çağrılan · sınıf)  "+kenar.length+" bağ");
+  kenar.slice(0,SINIR).forEach(([a,b,t])=>L.push(a+" → "+b+" · "+t));
+  if(kenar.length>SINIR)L.push("… +"+(kenar.length-SINIR)+" bağ daha (tamamı JSON çıktısında)");
+  /* ---- SEMBOLLER: ad → satır (dosyayı açmadan doğru yere atlamak için) ----
+     Sınır: 200 dosya × 8 sembol. Metin şişmesin; kalanı JSON ve MD çıktısında var. */
+  const SEMB_DOSYA=200, SEMB_ADET=8;
+  const sembolik=N.filter(x=>x.sembol&&x.sembol.length).sort((a,b)=>String(a.path).localeCompare(String(b.path)));
+  if(sembolik.length){
+    L.push("");
+    L.push("## semboller  (dosya: ad:satır)  "+sembolik.length+" dosya");
+    sembolik.slice(0,SEMB_DOSYA).forEach(x=>{
+      const s=x.sembol.slice(0,SEMB_ADET);
+      L.push(x.path+": "+s.map(z=>z.ad+":"+z.satir).join(", ")+(x.sembol.length>s.length?" … +"+(x.sembol.length-s.length):""));
+    });
+    if(sembolik.length>SEMB_DOSYA)L.push("… +"+(sembolik.length-SEMB_DOSYA)+" dosya daha (tamamı JSON ve MD çıktısında)");
+  }
   p.textContent=L.join("\n");
 }
 const _rz=_el("rayOzet"),_rk=_el("rayKapat"),_rm=_el("rayMod"),_ra=_el("rayAnahtar");
