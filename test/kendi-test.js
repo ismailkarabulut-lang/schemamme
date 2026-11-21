@@ -361,5 +361,25 @@ test("T21 model metnindeki etki sütunu erişim ile aynı", () => {
   if (etkiAlan !== "2") throw new Error("metindeki etki sütunu 2 değil · gelen: [" + etkiAlan + "] satır: " + sat);
 });
 
+/* T22 — PANEL TUTARLILIĞI: ham liste sayısı ile etki sayısı ayrışabilir; ayrıştığı yerde
+   başlık "· N kaynak (etkiye sayılmaz)" ve çip "kaynak" işaretini taşır. Çelişki değil, etiket. */
+test("T22 panelde kaynak bağı çipte işaretli, başlıkta 'etkiye sayılmaz' yazar", () => {
+  sandbox.__D = [
+    { path: "build.gradle.kts", text: 'tasks { kural("proguard-rules.pro") }\n', size: 40 },
+    { path: "proguard-rules.pro", text: "-keep class X\n", size: 15 },
+  ];
+  calistir("G=fileGraph(__D); draw();");
+  const id = (p) => calistir("G.find(x=>x.path===" + JSON.stringify(p) + ").id");
+  const pr = id("proguard-rules.pro");
+  if (calistir("kaynakSay(G[" + pr + "],'yukari')") !== 1) throw new Error("kaynak sayısı yanlış");
+  const kart = sahteEl();
+  const eskiQ = sandbox.document.querySelector;
+  sandbox.document.querySelector = () => kart;
+  try { calistir("pick(" + pr + ")"); } finally { sandbox.document.querySelector = eskiQ; }
+  const h = String(kart.innerHTML || "");
+  if (!/1 kaynak \(etkiye sayılmaz\)/.test(h)) throw new Error("başlıkta kaynak notu yok · gelen: " + h.slice(0, 200));
+  if (!/kaynak<\/i>/.test(h)) throw new Error("çipte kaynak işareti yok");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);

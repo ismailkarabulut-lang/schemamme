@@ -747,9 +747,16 @@ function view(){
     else{p.classList.toggle("on",sel>=0&&(a===sel||b===sel));p.classList.toggle("off",sel>=0&&a!==sel&&b!==sel);}
   });
 }
-function chips(ids){
-  return ids.size?[...ids].map(i=>'<button class="chip" data-go="'+i+'" style="border-color:'+col[G[i].group]+'">'+esc(G[i].name)+"</button>").join(""):'<span class="p">yok</span>';
+/* chips(ids, sahip, yon): sahip verilirse her çipin BAĞ SINIFI okunur; `kaynak` sınıfı
+   görünür biçimde işaretlenir (ad yalnız metin sabitinde geçiyor, etkiye sayılmaz).
+   Böylece "ham liste (N)" ile "etki sayısı (M)" arasındaki fark gözle görülür, çelişki sayılmaz. */
+function chips(ids,sahip,yon){
+  return ids.size?[...ids].map(i=>{
+    const kn=sahip?(GUVEN.get(yon==="yukari"?(i+"-"+sahip.id):(sahip.id+"-"+i))==="kaynak"):false;
+    return '<button class="chip" data-go="'+i+'" style="border-color:'+col[G[i].group]+'"'+(kn?' title="kaynak sınıfı: dosya adı yalnız bir metin sabitinde geçiyor — çağrı kanıtı yok, etkiye sayılmaz"':'')+'>'+esc(G[i].name)+(kn?' <i style="opacity:.65;font-style:normal">kaynak</i>':"")+"</button>";
+  }).join(""):'<span class="p">yok</span>';
 }
+function kaynakSay(x,yon){let n=0;(yon==="yukari"?x.inn:x.out).forEach(b=>{if(G[b]&&GUVEN.get(yon==="yukari"?(b+"-"+x.id):(x.id+"-"+b))==="kaynak")n++});return n;}
 /* BAĞ DURUMU — üç hâl (Kaptan 19.11 "önce doğru çalışsın"). Ekranda "0" görmek
    "kullanılmıyor" demek DEĞİLDİR; hangi hâlde olduğu yazılır. */
 function bagDurum(x){
@@ -775,8 +782,8 @@ function pick(i){
     +gorevTarifi(x)
     +'<div class="odak"><button class="obtn'+(odakYon==="asagi"?" secili":"")+'" data-odak="asagi">↓ erişim: çağırdıkları ('+erisimSay(x,"asagi")+')</button>'
     +'<button class="obtn'+(odakYon==="yukari"?" secili":"")+'" data-odak="yukari">↑ erişim: onu çağıranlar ('+erisimSay(x,"yukari")+')</button></div>'
-    +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
-    +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
+    +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")"+(kaynakSay(x,"asagi")?" · "+kaynakSay(x,"asagi")+" kaynak (etkiye sayılmaz)":"")+"</h3>"+chips(x.out,x,"asagi")
+    +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")"+(kaynakSay(x,"yukari")?" · "+kaynakSay(x,"yukari")+" kaynak (etkiye sayılmaz)":"")+"</h3>"+chips(x.inn,x,"yukari")
     ;
   /* Yan alan: kart görünür, özet gizlenir; panel açık kalır (haritayı örtmez, alanı daraltır). */
   P.hidden=false;const oz=$("#ozet");if(oz)oz.hidden=true;document.body.classList.add("panelAcik");
