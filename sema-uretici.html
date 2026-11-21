@@ -348,7 +348,7 @@ function fileGraph(E){
     return{id:i,name:nm,path:e.path,ext,group:e.path.includes("/")?e.path.split("/")[0]:"(kök)",text:tx,size:e.size,okunmadi:sir||!!e.okunmadi,nd:sir?"sir":(e.neden||""),
       lines:tx?tx.split("\n").length:0,belirsiz:0,out:new Set(),inn:new Set(),sum:okunmadiMetni(sir?{okunmadi:true,neden:"sir",path:e.path}:e),defs:defs(tx),sembol:semboller(tx),kod:kodTemizle(tx,ext),yorumsuz:yorumSil(tx,ext),not:notVer(e.path)||(e.not||"")};
   });
-  const byName={},byStem={},DECL={},PAKET={},DECL_ADAY={},CAKISMA={},byPath={},byStemList={};
+  const byName={},byStem={},DECL={},PAKET={},PKT={},DECL_ADAY={},CAKISMA={},byPath={},byStemList={};
   const yolNorm=p=>String(p||"").replace(/\\/g,"/").replace(/\/{2,}/g,"/").replace(/^\.\//,"");
   /* Aynı adlı iki dosya varsa seçim OKUMA SIRASINDAN BAĞIMSIZ olmalı: kaynağa en yakın yol
      kazanır, eşitlikte alfabetik. (Kotlin için yapılan düzeltmenin aynısı js/py'de de şart:
@@ -371,11 +371,21 @@ function fileGraph(E){
       /* Proje paketi: "package com.example.ui.theme" → PAKET["com.example.ui.theme.Color"] */
       const pr=/^\s*package\s+([\w.]+)/m.exec(n.text);
       if(pr)PAKET[pr[1]+"."+n.name.replace(/\.(kt|java)$/,"")]=n;
+      /* Paket + Sembol: "com.example.data" paketinde tanımlı Models → PKT["com.example.data.Models"].
+         Import dosya adıyla eşleşmese de (Models.Gorev · Theme.Color · Daos.TheiaDao) hedef bulunur.
+         (21.11: import sınıfı bağ 13'te kalıyordu; 124 proje içi import satırının çoğu çözülmüyordu.) */
+      const pkt=pr?pr[1]:"";
       /* Tanımlar: class/object/interface/fun + val/var (büyük harfle başlayan) */
       const rd=/^\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:data|sealed|enum|abstract|private|internal|open|annotation|public|final|inline|suspend)\s+)*(?:class|object|interface|fun|val|var)\s+([A-Z]\w+)/gm;
       /* Kotlin uzantısı: "fun TheiaViewModel.foo(" → TheiaViewModel TANIM DEĞİL, kullanımdır.
          Bu ayrım yapılmadığı için sembol tablosu *Bolumu.kt dosyalarına kilitleniyordu. */
       const kod=n.kod||n.text;
+      /* Uzantı ve üst-düzey FONKSİYONLAR (21.11): "internal fun TheiaViewModel.setOverlay(" →
+         `import com.example.viewmodel.setOverlay` ile çağrılır; ad KÜÇÜK harfli olabilir.
+         Yalnız satır başındakiler (üst düzey) sayılır — sınıf içindeki üyeler import edilemez.
+         Ayrı indekse (PKT) yazılır, DECL/"ad" tablosu kirlenmez. */
+      const rf=/^(?:(?:internal|private|public|protected|override|suspend|inline|operator|infix|tailrec|external|expect|actual)\s+)*fun\s+(?:<[^>\n]*>\s*)?(?:[A-Za-z_][\w<>?., ]*\.)?([a-zA-Z_]\w*)\s*\(/gm;
+      if(pkt){let f;while(f=rf.exec(kod)){const kk=pkt+"."+f[1];(PKT[kk]=PKT[kk]||[]).includes(n)||PKT[kk].push(n);}}
       /* Uzantı fonksiyonu mu, kendi sınıfı var mı: "bölüm dosyası" ayrımı için.
          Örn. SohbetDurumBolumu.kt → yalnız "fun TheiaViewModel.xxx()" tanımlar. */
       n.uzanti=/^\s*(?:(?:internal|private|public|suspend|inline|open)\s+)*fun\s+[A-Z]\w*\./m.test(kod);
@@ -383,6 +393,7 @@ function fileGraph(E){
       while(m=rd.exec(n.kod||n.text)){
         if(kod.slice(rd.lastIndex,rd.lastIndex+1)===".")continue;
         (DECL_ADAY[m[1]]=DECL_ADAY[m[1]]||[]).push(n);
+        if(pkt){(PKT[pkt+"."+m[1]]=PKT[pkt+"."+m[1]]||[]).includes(n)||PKT[pkt+"."+m[1]].push(n);}
       }
     }
     const st=n.name.replace(/\.[^.]+$/,"");
@@ -495,7 +506,23 @@ function fileGraph(E){
       [...new Set(kod.match(/\b[A-Z]\w{3,}\b/g)||[])].forEach(w=>add(DECL[w],"ad"));
       /* import: yalnız proje paketiyle TAM eşleşme; dış kütüphane yok sayılır */
       let m;const rk=/^\s*import\s+([\w.]+)/gm;
-      while(m=rk.exec(kod)){const t=m[1];if(!DIS.test(t))add(PAKET[t],"import")}
+      /* Hedef sırası (21.11): 1) dosya adı eşleşmesi (PAKET) · 2) paket+sembol tablosu (PKT),
+         ad en uzun önekten kısaltılarak aranır (Models.Gorev → Models). Aynı anahtara iki aday
+         düşerse bağ KURULMAZ, "belirsiz" sayılır — yanlış bağ eksik bağdan kötüdür. */
+      while(m=rk.exec(kod)){
+        const t=m[1];
+        if(DIS.test(t))continue;
+        let h=PAKET[t]||null, cok=false;
+        if(!h){
+          let k=t;
+          while(k.includes(".")){
+            const aday=PKT[k];
+            if(aday){ if(aday.length===1)h=aday[0]; else cok=true; break; }
+            k=k.slice(0,k.lastIndexOf("."));
+          }
+        }
+        if(h)add(h,"import"); else if(cok)a.belirsiz=(a.belirsiz||0)+1;
+      }
     }
     /* JS/TS: import ... from '…' · export … from '…' · import '…' · require('…') · import('…') */
     if(/^(js|mjs|cjs|jsx|ts|tsx|vue|svelte)$/.test(a.ext)){
