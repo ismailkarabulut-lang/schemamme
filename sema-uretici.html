@@ -688,16 +688,27 @@ function draw(){
 }
 /* ERİŞİM KÜMESİ — seçili dosyadan bağları izleyerek ulaşılan TÜM dosyalar.
    yon="asagi": çağırdıkları · yon="yukari": onu çağıranlar. Genişlik sınırı yok,
-   döngü korumalı (Set). Bağ sınıfı ayrımı yapmaz: zayıf bağ da zincire girer,
-   çünkü soru "neye dokunuyor", "kanıtı ne kadar güçlü" değil. */
+   döngü korumalı (Set). Bağ sınıfı ayrımı YAPAR (21.11'den beri): `kaynak` sınıfı
+   zincire girmez — ad yalnız metin sabitinde geçiyor, çağrı kanıtı yok. */
+/* ETKİ DIŞI SINIF (21.11, Kaptan onayı): `kaynak` = dosya adı yalnız bir metin sabitinde geçiyor,
+   çağrı kanıtı yok (örn. build.gradle.kts → proguard-rules.pro). Bağ HARİTADA kalır, listede görünür;
+   yalnız erişim/etki hesabına sayılmaz — "bunu silersem ne kırılır" sorusunu şişirmesin. */
+const ETKI_DISI=new Set(["kaynak"]);
+function etkiKenari(aId,bId,yon){const k=(yon==="yukari")?(bId+"-"+aId):(aId+"-"+bId);return !ETKI_DISI.has(GUVEN.get(k));}
 function erisim(baslangic,yon){
   const kume=new Set([baslangic]),kuyruk=[baslangic];
   while(kuyruk.length){
     const a=G[kuyruk.shift()];if(!a)continue;
-    (yon==="yukari"?a.inn:a.out).forEach(b=>{if(!kume.has(b)&&G[b]){kume.add(b);kuyruk.push(b)}});
+    (yon==="yukari"?a.inn:a.out).forEach(b=>{
+      if(kume.has(b)||!G[b])return;
+      if(!etkiKenari(a.id,b,yon))return;
+      kume.add(b);kuyruk.push(b);
+    });
   }
   return kume;
 }
+/* Panel düğmesindeki sayı da aynı süzgeçten geçer: sayı ile yanan düğüm sayısı eşit kalsın. */
+function erisimSay(x,yon){let n=0;(yon==="yukari"?x.inn:x.out).forEach(b=>{if(G[b]&&etkiKenari(x.id,b,yon))n++});return n;}
 /* KAYNAK KARTI — dosyanın gerçek satırları, numaralı. Sembole tıklayınca o satır çevresi.
    Metin okunmadıysa (sır/ikili/4 MB+) kart açılmaz: içerik yok, uydurma yok. */
 function kodGoster(id,satir){
@@ -754,8 +765,8 @@ function pick(i){
     +'<div class="nota"><h3>NOT <em>· bu dosya için · haritada kalır · JSON ve MD çıktısına girer</em></h3>'
     +'<textarea id="notaKutu" rows="2" placeholder="Modele ya da gelecekteki sana not: neden dokunulmaz, neyi bozar, ne yapılacak…">'+esc(x.not||"")+"</textarea></div>"
     +gorevTarifi(x)
-    +'<div class="odak"><button class="obtn'+(odakYon==="asagi"?" secili":"")+'" data-odak="asagi">↓ erişim: çağırdıkları ('+x.out.size+')</button>'
-    +'<button class="obtn'+(odakYon==="yukari"?" secili":"")+'" data-odak="yukari">↑ erişim: onu çağıranlar ('+x.inn.size+')</button></div>'
+    +'<div class="odak"><button class="obtn'+(odakYon==="asagi"?" secili":"")+'" data-odak="asagi">↓ erişim: çağırdıkları ('+erisimSay(x,"asagi")+')</button>'
+    +'<button class="obtn'+(odakYon==="yukari"?" secili":"")+'" data-odak="yukari">↑ erişim: onu çağıranlar ('+erisimSay(x,"yukari")+')</button></div>'
     +"<h3>"+(heading?"Alt başlıklar":"Çağırdıkları")+" ("+x.out.size+")</h3>"+chips(x.out)
     +"<h3>"+(heading?"Üst başlık":"Onu çağıranlar")+" ("+x.inn.size+")</h3>"+chips(x.inn)
     ;

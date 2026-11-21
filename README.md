@@ -21,7 +21,7 @@ Bir projeye dışarıdan bakınca ilk sorular şunlar oluyor: *hangi dosya neyi 
 
 ## Haritada soru sormak
 
-- **Erişim (focus & reach)** — bir kutuya tıkla, panelde **↓ erişim: çağırdıkları** ya da **↑ erişim: onu çağıranlar** düğmesine bas: zincirin **tamamı** yanar, gerisi söner. *"Bunu silersem ne kırılır"* sorusunun cevabı. Bağ sınıfı ayrımı yapılmaz (import · ad · kaynak hepsi zincire girer) — soru *neye dokunuyor*, *kanıtı ne kadar güçlü* değil. Düğmeye tekrar basmak ya da kartı kapatmak erişimi sıfırlar.
+- **Erişim (focus & reach)** — bir kutuya tıkla, panelde **↓ erişim: çağırdıkları** ya da **↑ erişim: onu çağıranlar** düğmesine bas: zincirin **tamamı** yanar, gerisi söner. *"Bunu silersem ne kırılır"* sorusunun cevabı. `import` ve `ad` sınıfları zincire girer; **`kaynak` sınıfı girmez** (dosya adı yalnız bir metin sabitinde geçiyor, çağrı kanıtı yok — örn. `build.gradle.kts → proguard-rules.pro`). Bağ haritada ve bağ listesinde **durur**, yalnız etki hesabına sayılmaz; panel düğmesindeki sayı da bu süzgeçten geçer. Düğmeye tekrar basmak ya da kartı kapatmak erişimi sıfırlar.
 - **Kaynak kartı** — paneldeki **fonksiyon/sınıf** düğmesine tıkla: dosyanın **gerçek satırları** numaralı açılır, seçtiğin satır vurgulanır (üstte 4, altta 10 satır çevre). `baştan göster` dosyanın başını açar. Metni okunmayan dosyada kart **hiç açılmaz** (sır · ikili · 4 MB+): içerik yoksa uydurma da yok.
 
 ## Roller

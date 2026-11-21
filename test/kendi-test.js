@@ -312,5 +312,27 @@ test("T19 özet yoksa ilk tanım satırı [tanım] ile alıntılanır", () => {
   if (!sat("bos.py").trim().endsWith("—")) throw new Error("tanım da yokken — yazmadı · gelen: " + sat("bos.py"));
 });
 
+/* T20 — ERİŞİM SINIF SÜZGECİ: `kaynak` (ad yalnız metin sabitinde geçiyor) etki hesabına
+   girmez, `ad` girer. Bağ silinmiyor — haritada ve bağ listesinde duruyor. */
+test("T20 erişim `kaynak` sınıfını saymaz, `ad` sınıfını sayar", () => {
+  sandbox.__D = [
+    { path: "build.gradle.kts", text: 'tasks { kural("proguard-rules.pro") }\n', size: 40 },
+    { path: "proguard-rules.pro", text: "-keep class X\n", size: 15 },
+    { path: "Ana.kt", text: "package p\nclass Alpha\n", size: 30 },
+    { path: "Kullanan.kt", text: "package p\nfun f(){ Alpha() }\n", size: 34 },
+  ];
+  calistir("G=fileGraph(__D); draw();");
+  const id = (p) => calistir("G.find(x=>x.path===" + JSON.stringify(p) + ").id");
+  const gr = id("build.gradle.kts"), pr = id("proguard-rules.pro");
+  const sinif = calistir("GUVEN.get(" + gr + " + '-' + " + pr + ")");
+  if (sinif !== "kaynak") throw new Error("kaynak kenar kurulmadı · gelen: " + sinif);
+  const yukari = JSON.parse(calistir("JSON.stringify([...erisim(" + pr + ",'yukari')])"));
+  if (yukari.includes(gr)) throw new Error("kaynak sınıfı çağıran erişime girdi");
+  const ana = id("Ana.kt"), kull = id("Kullanan.kt");
+  const yukari2 = JSON.parse(calistir("JSON.stringify([...erisim(" + ana + ",'yukari')])"));
+  if (!yukari2.includes(kull)) throw new Error("ad sınıfı çağıran erişime girmedi");
+  if (calistir("erisimSay(G[" + pr + "],'yukari')") !== 0) throw new Error("panel sayısı süzgeci uygulanmadı");
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);
