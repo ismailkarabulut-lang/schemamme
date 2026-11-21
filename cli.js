@@ -76,7 +76,21 @@ async function main() {
   const giren = hepsi.filter((p) => !calistir("SKIP.test(" + JSON.stringify(p) + ")"));
 
   const E = [];
+  /* Uygulamanın kendi eşiği (4 MB) — kapıyı diskten okumadan ÖNCE sorabilmek için. */
+  const BUYUK = calistir("BUYUK");
   for (const p of giren) {
+    const pj = JSON.stringify(p);
+    let boyut = 0;
+    try { boyut = fs.statSync(path.join(kok, p)).size; } catch (e) { boyut = 0; }
+    /* KAPI ÖNCE (21.11): sır · okunmayan uzantı · 4 MB üstü dosya diskten HİÇ okunmaz.
+       Tarayıcı yolu da böyle yapıyor; sıra eşitlenince iki yol aynı davranıyor.
+       (Önce: her dosya readFileSync ile okunup sonra kapıya soruluyordu → apk klasörü
+       olan bir projede 1,1 GB boşuna okundu, 58 dosya 20,8 sn sürdü.) */
+    if (calistir("sirMi(" + pj + ")") || !calistir("okunabilirUzanti(" + pj + ")") || boyut >= BUYUK) {
+      const r = await calistir("metinAl(" + pj + "," + boyut + ",function(){return \"\"})");
+      E.push({ path: p, size: boyut, text: r.t, okunmadi: r.okunmadi, neden: r.neden });
+      continue;
+    }
     const b = fs.readFileSync(path.join(kok, p));
     const metin = b.toString("utf8");
     /* metinAl = uygulamanın okuma kapısı (sır / uzantı / boyut / ikili). Aynı kod, aynı hüküm. */
