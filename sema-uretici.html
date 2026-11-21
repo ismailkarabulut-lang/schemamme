@@ -940,7 +940,10 @@ function guide(x){
   let t='<div class="role"><b>Rolü: '+r.short+'</b><br>'+r.long+'<br>';
   if(x.out.size)t+='• Çalışmak için şunlara ihtiyacı var: '+esc(names(x.out))+'. Onlar bozulursa bu da bozulur.<br>';
   if(x.out.size){const imp=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="import").length;const kay=[...x.out].filter(i=>GUVEN.get(x.id+"-"+i)==="kaynak").length;t+='• Bağ güveni: '+imp+' import, '+(x.out.size-imp-kay)+' ad'+(kay?', '+kay+' kaynak (metin sabitinde dosya adı)':'')+'. Kesin olmayanı koda bakmadan doğru sayma.<br>'}
-  if(x.inn.size)t+='• Bunu şunlar kullanıyor: '+esc(names(x.inn))+'. Bunu değiştirirsen ya da silersen onlar etkilenir.<br>';
+  const etkAd=[...x.inn].filter(i=>etkiKenari(x.id,i,"yukari")).map(i=>G[i].name);
+  const kaynakAd=[...x.inn].filter(i=>!etkiKenari(x.id,i,"yukari")).map(i=>G[i].name);
+  if(etkAd.length)t+='• Bunu şunlar kullanıyor: '+esc(etkAd.join(", "))+'. Bunu değiştirirsen ya da silersen onlar etkilenir.<br>';
+  if(kaynakAd.length)t+='• <b>Kaynak bağı</b> var, etkiye sayılmaz: '+esc(kaynakAd.join(", "))+' — dosya adı yalnız metin sabitinde geçiyor, çağrı kanıtı yok.<br>';
   if(hepsiZayif(x))t+='• Gelen bağların hepsi <b>ad eşleşmesi</b> (import satırı değil) — gerçek çağrı olmayabilir, koda bakıp doğrula.<br>';
   return t+'• Dokunma riski: <b>'+r.risk+'</b> (kaç dosyanın ona bağlı olduğuna göre)</div>';
 }
@@ -1122,18 +1125,23 @@ function tarifTekSatir(x){
 }
 function gorevTarifi(x){
   if(heading)return"";
-  const oku=[...x.out].map(i=>G[i].name), etk=[...x.inn].map(i=>G[i].name);
+  /* Etki listesi erişim() ile AYNI süzgeçten geçer: kaynak sınıfı "değiştirirsen etkilenir"
+     listesine girmez, ayrı satırda ve sebebiyle yazar (21.11 — panel kendi kendisiyle çelişmesin). */
+  const oku=[...x.out].map(i=>G[i].name),
+        etk=[...x.inn].filter(i=>etkiKenari(x.id,i,"yukari")).map(i=>G[i].name),
+        kaynakEtk=[...x.inn].filter(i=>!etkiKenari(x.id,i,"yukari")).map(i=>G[i].name);
   const risk=roleOf(x).risk;
   if(x.okunmadi){
     if(x.nd==="sir")
       return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Sır dosyası: içeriği bilerek okunmadı (anahtar/parola tutabilir). Bağ ve rol hesaplanmadı — <b>bağlantısız sayma.</b> Modele: "bu dosyanın içeriğini okuma, sadece varlığını bil; değerleri sohbete ve koda yazma" de.</div>';
     return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Dosya 4 MB üzeri olduğu için içeriği okunmadı; bağ ve rol hesaplanmadı. <b>Bağlantısız sayma:</b> "kullanılmıyor" hükmü burada veri yokluğundan doğar. Modele: "önce dosyayı küçük parçalara böl, sonra karar ver" de.</div>';
   }
-  if(!oku.length&&!etk.length)
+  if(!oku.length&&!etk.length&&!kaynakEtk.length)
     return '<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3>Bağlantısı yok: ya tek başına çalışan bir araç ya da kullanılmayan dosya. Modele: “çağrıldığı yeri ara; bulunamazsa silme adayıdır” de.</div>';
   let h='<div class="gorev"><h3>MODEL İÇİN GÖREV TARİFİ</h3><ol>';
   if(oku.length)h+='<li><b>Önce oku:</b> '+esc(oku.slice(0,6).join(", "))+(oku.length>6?" +"+(oku.length-6):"")+' — bunlar olmadan dosya anlaşılmaz.</li>';
   if(etk.length)h+='<li><b>Değiştirirsen etkilenir ('+etk.length+'):</b> '+esc(etk.slice(0,6).join(", "))+(etk.length>6?" +"+(etk.length-6):"")+'</li>';
+  if(kaynakEtk.length)h+='<li><b>Kaynak bağı var, etkiye sayılmaz ('+kaynakEtk.length+'):</b> '+esc(kaynakEtk.slice(0,4).join(", "))+' — dosya adı yalnız metin sabitinde geçiyor, çağrı kanıtı yok.</li>';
   h+='<li><b>Dokunma riski:</b> '+risk+(risk==="yüksek"?" — değişiklikten sonra tüm çağıranları derle/çalıştır":"")+'</li>';
   h+='<li><b>Doğrula:</b> '+(etk.length?'değişiklikten sonra '+esc(etk.slice(0,3).join(", "))+' yeniden derle':'bu dosya başlatıcı (çağıranı yok): derle ve uygulamayı çalıştır')+'</li>';
   if(x.sembol&&x.sembol.length)h+='<li><b>Satır çapası:</b> '+esc(x.sembol.slice(0,5).map(s=>s.ad+":"+s.satir).join(", "))+'</li>';

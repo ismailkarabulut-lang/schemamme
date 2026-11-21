@@ -379,6 +379,11 @@ test("T22 panelde kaynak bağı çipte işaretli, başlıkta 'etkiye sayılmaz' 
   const h = String(kart.innerHTML || "");
   if (!/1 kaynak \(etkiye sayılmaz\)/.test(h)) throw new Error("başlıkta kaynak notu yok · gelen: " + h.slice(0, 200));
   if (!/kaynak<\/i>/.test(h)) throw new Error("çipte kaynak işareti yok");
+  /* Görev tarifi de aynı süzgeci kullanmalı: kaynak bağı "değiştirirsen etkilenir" listesine giremez. */
+  if (!/Kaynak bağı var, etkiye sayılmaz \(1\)/.test(h)) throw new Error("görev tarifinde kaynak satırı yok · gelen: " + h.slice(0, 300));
+  if (/Değiştirirsen etkilenir \(1\)/.test(h)) throw new Error("kaynak bağı etki listesine sayıldı");
+  if (/Bunu değiştirirsen ya da silersen onlar etkilenir/.test(h)) throw new Error("rol açıklaması kaynak bağını etki sayıyor");
+  if (!/Kaynak bağı<\/b> var, etkiye sayılmaz/.test(h)) throw new Error("rol açıklamasında kaynak satırı yok");
 });
 
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
