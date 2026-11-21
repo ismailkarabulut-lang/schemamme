@@ -334,5 +334,32 @@ test("T20 erişim `kaynak` sınıfını saymaz, `ad` sınıfını sayar", () => 
   if (calistir("erisimSay(G[" + pr + "],'yukari')") !== 0) throw new Error("panel sayısı süzgeci uygulanmadı");
 });
 
+/* T21 — ETKİ SÜTUNU: metindeki etki sayısı, paneldeki ↑ erişim ile AYNI hesap (zincir boyunca,
+   kendisi hariç, kaynak sınıfı sayılmaz). Sütun genişlikleri yas() ile sabit. */
+test("T21 model metnindeki etki sütunu erişim ile aynı", () => {
+  sandbox.__D = [
+    { path: "Beta.kt", text: "package p\nclass Beta\n", size: 25 },
+    { path: "Gama.kt", text: "package p\nclass Gama\nfun g(){ Beta() }\n", size: 40 },
+    { path: "Delta.kt", text: "package p\nfun d(){ Gama() }\n", size: 30 },
+  ];
+  calistir("G=fileGraph(__D); draw();");
+  const id = (p) => calistir("G.find(x=>x.path===" + JSON.stringify(p) + ").id");
+  const b = id("Beta.kt");
+  const er = JSON.parse(calistir("JSON.stringify([...erisim(" + b + ",'yukari')])")).length - 1;
+  const et = calistir("etkiSayisi(" + b + ")");
+  if (er !== 2 || et !== 2) throw new Error("zincir etkisi yanlış · erişim:" + er + " etki:" + et);
+  const depo = {}, eski = sandbox.document.getElementById;
+  sandbox.document.getElementById = (i) => depo[i] || (depo[i] = sahteEl());
+  let metin = "";
+  try {
+    calistir("if(typeof KOK_YOL!=='undefined')KOK_YOL=''"); calistir("modelYaz()");
+    metin = depo.modelMetin ? depo.modelMetin.textContent : "";
+  } finally { sandbox.document.getElementById = eski; }
+  const sat = metin.split("\n").find((s) => s.startsWith("Beta.kt ")) || "";
+  /* sütun başlangıçları: yol 54 · rol 14 · satır 5 · çağırdığı 3 · çağıran 3 → etki 84. karakterde */
+  const etkiAlan = sat.slice(84, 88).trim();
+  if (etkiAlan !== "2") throw new Error("metindeki etki sütunu 2 değil · gelen: [" + etkiAlan + "] satır: " + sat);
+});
+
 console.log("\n" + gecen + " geçti · " + dusen + " düştü");
 process.exit(dusen ? 1 : 0);

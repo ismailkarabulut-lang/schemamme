@@ -44,7 +44,7 @@ Bu ayrım keyfi değil: **veri yokluğu hüküm değildir.** Okunamayan bir dosy
 
 | Yer | Ne üretir | Ne işe yarar |
 |---|---|---|
-| 🧠 **Model modu** (`m` tuşu) | ekranda metin | Modele verilecek metin: künye, dosya tablosu (rol · satır · bağ sayıları · risk · durum · *ne iş yapar*), okuma sırası |
+| 🧠 **Model modu** (`m` tuşu) | ekranda metin | Modele verilecek metin: künye, dosya tablosu (rol · satır · bağ sayıları · **etki** · risk · durum · *ne iş yapar*), okuma sırası. **etki** = "bunu değiştirirsem kaç dosya etkilenir" (zincir boyunca, `kaynak` sınıfı sayılmaz) |
 | 📘 **Harita (MD)** | `SEMA-HARITASI.md` | İnsan için uzun belge: katmanlar, sembol dizini (ad → dosya:satır), dosya kartları |
 | 💾 **JSON** | `sema-graph.json` | Başka araçlar için: `dosya[]` + `kenar[]` |
 | 🖼 **PNG** | `proje-haritasi.png` | Haritanın resmi — harici kütüphane yok, canvas ile çizilir |

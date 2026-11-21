@@ -201,7 +201,7 @@ const ROL_RENK={"başlatıcı":"#7C6EF5","aracı":"#2DD4BF","temel parça":"#EF9
 function renkOf(x){if(heading)return "#4FA8D5";if(x.okunmadi)return "#8A93A6";return ROL_RENK[roleOf(x).short]||"#8A93A6"}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map(),KOK_AD="",odakYon="";
+let G=[],sel=-1,heading=false,Z=1,col={},KATLI=new Set(),GUVEN=new Map(),ETKI_CACHE=new Map(),KOK_AD="",odakYon="";
 
 /* Bir dosyanın metni okunacak mı: üç engel var — okunmayan uzantı, boyut, ikili içerik.
    Üçü de "ölçülmedi" demektir; hiçbiri "kullanılmıyor" hükmü üretmez. */
@@ -362,7 +362,7 @@ function fileGraph(E){
   /* Dış kütüphane kökleri: bunlardan gelen adlar proje dosyasıyla EŞLEŞTİRİLMEZ.
      (Örn. androidx.compose.ui.graphics.Color → Color.kt sanılıyordu.) */
   const DIS=/^(android|androidx|kotlin|kotlinx|java|javax|dalvik|sun|org|com\.google|com\.squareup|com\.android|okhttp3|retrofit2|io\.|org\.)/;
-  GUVEN=new Map();
+  GUVEN=new Map();ETKI_CACHE=new Map();   /* yeni grafik: bağ sınıfları ve etki sayıları tazelenir */
   N.forEach(n=>{
     if(!byName[n.name])byName[n.name]=n;
     byPath[yolNorm(n.path)]=n;
@@ -709,6 +709,14 @@ function erisim(baslangic,yon){
 }
 /* Panel düğmesindeki sayı da aynı süzgeçten geçer: sayı ile yanan düğüm sayısı eşit kalsın. */
 function erisimSay(x,yon){let n=0;(yon==="yukari"?x.inn:x.out).forEach(b=>{if(G[b]&&etkiKenari(x.id,b,yon))n++});return n;}
+/* ETKİ SAYISI (21.11) — "bunu değiştirirsem kaç dosya etkilenir": bu dosyaya (zincir boyunca)
+   ulaşan çağıranların sayısı, kendisi hariç. erisim() ile AYNI süzgeç: kaynak sınıfı sayılmaz,
+   böylece metindeki sayı ile paneldeki ↑ erişim düğmesi aynı cevabı verir. Önbellekli. */
+function etkiSayisi(id){
+  if(ETKI_CACHE.has(id))return ETKI_CACHE.get(id);
+  const n=Math.max(0,erisim(id,"yukari").size-1);
+  ETKI_CACHE.set(id,n);return n;
+}
 /* KAYNAK KARTI — dosyanın gerçek satırları, numaralı. Sembole tıklayınca o satır çevresi.
    Metin okunmadıysa (sır/ikili/4 MB+) kart açılmaz: içerik yok, uydurma yok. */
 function kodGoster(id,satir){
@@ -1392,13 +1400,14 @@ function modelYaz(){
   L.push("KURAL: bağ yok = bu haritada bulunamadı, \"kullanılmıyor\" hükmü değil. belirsiz = import yazılmış ama hedefi çözülememiş.");
   L.push("KURAL: son alan (ne iş yapar) dosyanın KENDİ başlık yorumundan ALINTI; özet yoksa — yazar, tahmin edilmez. [tanım] = başlık yorumu yok, ilk tanım satırı alıntılandı.");
   L.push("KURAL: çağırdığı/çağıran = bağ SAYISI (adları '## bağlar' bölümünde) · durum — = ölçüldü, sorun yok · tehlike — = etiket yok.");
+  L.push("KURAL: etki = bunu değiştirirsen zincir boyunca etkilenen dosya SAYISI (kendisi hariç, paneldeki ↑ erişim ile aynı hesap) · kaynak sınıfı bağlar etkiye SAYILMAZ (ad yalnız metin sabitinde geçiyor).");
   L.push("KURAL: amaç/çalıştır da ALINTI — köşeli parantez kaynağı gösterir. tehlike = AD KURALI: eski kopya (.bak/.old/~) · üretilmiş (dist/build/*.min.js) · sır (metni okunmadı).");
   L.push("KURAL: yollar"+(KOK_YOL?" köke göre GÖRELİ — kök: "+KOK_YOL:" bu klasöre göre görelidir (tarayıcı mutlak yol vermez)")+".");
   L.push("");
-  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · risk · durum · tehlike · ne iş yapar)");
+  L.push("## dosyalar  (yol · rol · satır · çağırdığı · çağıran · etki · risk · durum · tehlike · ne iş yapar)");
   N.slice().sort((a,b)=>String(a.path).localeCompare(String(b.path))).forEach(x=>{
     const r=roleOf(x);
-    L.push(yas(x.path,54)+" "+yas(r.short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(r.risk||"—",9)+" "+yas(bagDurum(x)||"—",14)+" "+yas(tehlike(x)||"—",12)+" "+ozetVeyaTanim(x,72));
+    L.push(yas(x.path,54)+" "+yas(r.short,14)+" "+yas(x.lines||0,5)+" "+yas(x.out.size,3)+" "+yas(x.inn.size,3)+" "+yas(etkiSayisi(x.id),4)+" "+yas(r.risk||"—",9)+" "+yas(bagDurum(x)||"—",14)+" "+yas(tehlike(x)||"—",12)+" "+ozetVeyaTanim(x,72));
   });
   L.push("");
   L.push("## ilk 10 · önce ne okumalı (çağırdıkları)");
